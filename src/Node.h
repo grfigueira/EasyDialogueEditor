@@ -31,6 +31,8 @@ struct Node
     NodeType    nodeType;
     std::string text;
     ImVec2      position;
+    int nextNodeId = -1;
+    int prevNodeId = -1;
 
     SpeechNode* AsSpeech();
 
@@ -53,13 +55,13 @@ struct SpeechNode : public Node
         position = pos;
         responses = {};
         nextNodeId = -1;
+        prevNodeId = -1;
         expectesResponse = false;
     }
 };
 
 struct ResponseNode : public Node
 {
-    int nextNodeId;
 
     ResponseNode(int nodeId, const std::string& speechText, ImVec2 pos)
     {
@@ -68,6 +70,7 @@ struct ResponseNode : public Node
         text = speechText;
         position = pos;
         nextNodeId = -1;
+        prevNodeId = -1;
     }
 };
 
