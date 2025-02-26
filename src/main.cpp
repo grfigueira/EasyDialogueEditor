@@ -6,6 +6,34 @@
 #include "imnodes.h"
 #include <stdio.h>
 #include <iostream>
+#include <thread>
+
+bool running = true;
+SDL_Window* window;
+SDL_Renderer* renderer;
+
+bool WindowEventWatcher(void* userdata, SDL_Event* event)
+{
+    if (event->type == SDL_EVENT_WINDOW_EXPOSED)
+    {
+        SDL_Window* window = (SDL_Window*)userdata;
+        SDL_Renderer* renderer = SDL_GetRenderer(window);
+        if (!renderer) return 0;
+
+        ImGui_ImplSDLRenderer3_NewFrame();
+        ImGui_ImplSDL3_NewFrame();
+        ImGui::NewFrame();
+
+        storyteller::NodeEditorShow();
+
+        ImGui::Render();
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);
+        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer);
+        SDL_RenderPresent(renderer);
+    }
+    return true;
+}
 
 int main(int, char**) {
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
@@ -40,6 +68,7 @@ int main(int, char**) {
 
     ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer3_Init(renderer);
+    SDL_AddEventWatch(WindowEventWatcher, window);
 
     bool done = false;
     bool hasRootSpawned = false;
@@ -47,18 +76,10 @@ int main(int, char**) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             ImGui_ImplSDL3_ProcessEvent(&event);
-            if (event.type == SDL_EVENT_QUIT)
+            if (event.type == SDL_EVENT_QUIT){
                 done = true;
-            if (event.type == SDL_EVENT_WINDOW_RESIZED) {
-                int width, height;
-                SDL_GetWindowSize(window, &width, &height);
-                std::cout << "resized window: " << width << " x " << height << "\n";
-                io.DisplaySize = ImVec2((float)width, (float)height);
-            }
-            if (event.type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED ||
-                event.type == SDL_EVENT_WINDOW_MOVED) {
-                std::cout << "starterd resizing window\n";
-            }
+            }   
+            
         }
 
         ImGui_ImplSDLRenderer3_NewFrame();
@@ -85,6 +106,7 @@ int main(int, char**) {
     ImNodes::DestroyContext();
     ImGui::DestroyContext();
 
+    running = false;
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();

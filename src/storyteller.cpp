@@ -76,42 +76,7 @@ namespace storyteller
 				/******************************************************************************
 				 *                   What to do when a link is dropped
 				 ******************************************************************************/
-				{
-					int started_attr;
-					if (ImNodes::IsLinkDropped(&started_attr, /*including_detached_links=*/false))
-					{
-						LOG("linked dropped");
-						Node* start_node = nodes[started_attr >> NodePartShift::EndPin];
-
-						if (SpeechNode* speech_start_node = start_node->AsSpeech())
-						{
-							std::cout << "link dropped: start_node->nextNodeId = " << speech_start_node->nextNodeId << "\n";
-							if (speech_start_node->expectesResponse)
-							{
-								Node* newNode = AddNode("Yes/No", ImGui::GetMousePos(), NodeType::Response);
-								newNode->prevNodeId = started_attr >> NodePartShift::EndPin;
-
-								Link* link = new Link{
-									++next_link_id, started_attr, next_node_id << NodePartShift::InputPin };
-								links[next_link_id] = link;
-								speech_start_node->responses.push_back(next_node_id);
-							}
-							else if (start_node->nextNodeId == -1) // isn't connected to any node yet
-							{
-								Node* newNode = AddNode("This is interesting...", ImGui::GetMousePos(), NodeType::Speech);
-								newNode->prevNodeId = started_attr >> NodePartShift::EndPin;
-
-								Link* link = new Link{
-									++next_link_id, started_attr, next_node_id << NodePartShift::InputPin };
-								links[next_link_id] = link;
-								start_node->nextNodeId = next_node_id;
-							}
-							else {
-								LOG("Something went wrong");
-							}
-						}
-					}
-				}
+				HandleLinkDropped();
 
 				// Handle link creation between two already existing nodes
 				{
@@ -135,6 +100,41 @@ namespace storyteller
 
 				ImGui::Text("info: next_node_id: %d | window width: %f | window height: %f", next_node_id, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
 				ImGui::End();
+			}
+
+			void HandleLinkDropped()
+			{
+				int started_attr;
+				if (ImNodes::IsLinkDropped(&started_attr, /*including_detached_links=*/false))
+				{
+					LOG("linked dropped");
+					Node* start_node = nodes[started_attr >> NodePartShift::EndPin];
+
+					if (SpeechNode* speech_start_node = start_node->AsSpeech())
+					{
+						if (speech_start_node->expectesResponse)
+						{
+							Node* newNode = AddNode("Yes/No", ImGui::GetMousePos(), NodeType::Response);
+							newNode->prevNodeId = started_attr >> NodePartShift::EndPin;
+
+							Link* link = new Link{
+								++next_link_id, started_attr, next_node_id << NodePartShift::InputPin };
+							links[next_link_id] = link;
+							speech_start_node->responses.push_back(next_node_id);
+							return;
+						}
+					}
+					if (start_node->nextNodeId == -1) // isn't connected to any node yet
+					{
+						Node* newNode = AddNode("This is interesting...", ImGui::GetMousePos(), NodeType::Speech);
+						newNode->prevNodeId = started_attr >> NodePartShift::EndPin;
+
+						Link* link = new Link{
+							++next_link_id, started_attr, next_node_id << NodePartShift::InputPin };
+						links[next_link_id] = link;
+						start_node->nextNodeId = next_node_id;
+					}
+				}
 			}
 
 			void ShowNodeCreationPopup()
@@ -172,6 +172,8 @@ namespace storyteller
 
 			Node* AddNode(const char* text, ImVec2 pos, NodeType type)
 			{
+				pos.y -= 110.f;
+
 				Node* node{};
 				switch (type)
 				{
@@ -211,9 +213,17 @@ namespace storyteller
 
 							std::cout << "Deleting node " << node_id << " with prevNodeId " << nodes[node_id]->prevNodeId << "\n";
 							
-							nodes[nodes[node_id]->prevNodeId]->nextNodeId = -1;
-							
-							std::cout << "new nextNodeId of the previous node is " << nodes[nodes[node_id]->prevNodeId]->nextNodeId << "\n";
+							// TODO i should change all these pointers to shared pointers
+							if (Node* node = nodes[node_id]) {
+								if (Node* prev_node = nodes[node->prevNodeId]) {
+									prev_node->nextNodeId = -1;
+								}
+								if (node->nextNodeId != -1) {
+									if (Node* next_node = nodes[node->nextNodeId]) {
+										next_node->prevNodeId = -1;
+									}
+								}
+							}
 
 							nodes.erase(node_id);
 
