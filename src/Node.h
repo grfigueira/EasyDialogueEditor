@@ -85,5 +85,13 @@ struct Link
 {
     int id;
     int start_attr, end_attr;
+
+    bool StartsWithNode(int startNodeId) {
+        return start_attr == startNodeId << NodePartShift::EndPin;
+    }
+
+    bool EndsWithNode(int endNodeId) {
+        return end_attr == endNodeId << NodePartShift::InputPin;
+    }
 };
 

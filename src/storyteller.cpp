@@ -7,6 +7,7 @@
 #include <iostream>
 #include <cassert>
 #include "Node.h"
+#include <map>
 
 /******************************************************************************
  *                   StoryTeller - Main File
@@ -28,18 +29,17 @@ namespace storyteller
         class StoryTellerNodeEditor
         {
         private:
-            std::vector<std::shared_ptr<Node>> nodes;
-            std::vector<Link>                  links;
+
+            // Current state data
+            std::map<int, Node*>                 nodes; // these don't need to be pointers at all
+            std::map<int, Link*>                 links;
             int                                next_node_id = -1;
             int                                next_link_id = -1;
             static const char* NodeTypeStrings[];
 
         public:
 
-            /******************************************************************************
-             *                   show(): Runs every frame
-             ******************************************************************************/
-
+            // runs every frame
             void show()
             {
                 // Get the screen size from ImGui
@@ -50,21 +50,25 @@ namespace storyteller
                 ImGui::SetNextWindowSize(io.DisplaySize);
 
                 ImGui::Begin("StoryTeller");
+                HandleNodeRemoval();
 
                 ImNodes::BeginNodeEditor();
+
 
                 /******************************************************************************
                  *             Draw every node and link from current state
                  ******************************************************************************/
                 {
-                    for (const std::shared_ptr<Node> node : nodes)
+                    for (const auto& pair : nodes)
                     {
+                        Node* node = pair.second;
                         CreateNode(node->id, NodeTypeStrings[node->nodeType]);
                     }
 
-                    for (const Link& link : links)
+                    for (const auto& pair : links)
                     {
-                        ImNodes::Link(link.id, link.start_attr, link.end_attr);
+                        Link* link = pair.second;
+                        ImNodes::Link(link->id, link->start_attr, link->end_attr);
                     }
                 }
 
@@ -80,24 +84,24 @@ namespace storyteller
                     if (ImNodes::IsLinkDropped(&started_attr, /*including_detached_links=*/false))
                     {
                         std::cout << "it happened" << std::endl;
-                        std::shared_ptr<Node> start_node = nodes[started_attr >> NodePartShift::EndPin];
+                        Node* start_node = nodes[started_attr >> NodePartShift::EndPin];
 
                         if (SpeechNode* speech_start_node = start_node->AsSpeech())
                         {
                             if (speech_start_node->expectesResponse)
                             {
                                 AddNode("Yes/No", ImGui::GetMousePos(), NodeType::Response);
-                                Link link = {
+                                Link* link = new Link{
                                     ++next_link_id, started_attr, next_node_id << NodePartShift::InputPin };
-                                links.push_back(link);
+                                links[next_link_id] = link;
                                 speech_start_node->responses.push_back(next_node_id);
                             }
                             else if (speech_start_node->nextNodeId == -1) // isn't connected to any node yet
                             {
                                 AddNode("This is interesting...", ImGui::GetMousePos(), NodeType::Speech);
-                                Link link = {
+                                Link* link = new Link{
                                     ++next_link_id, started_attr, next_node_id << NodePartShift::InputPin };
-                                links.push_back(link);
+                                links[next_link_id] = link;
                                 speech_start_node->nextNodeId = next_node_id;
                             }
                         }
@@ -110,7 +114,8 @@ namespace storyteller
                     if (ImNodes::IsLinkCreated(&link.start_attr, &link.end_attr))
                     {
                         link.id = ++next_link_id;
-                        links.push_back(link);
+                        links[link.id] = &link;
+                        //links.push_back(link);
 
                         int startNode = link.start_attr >> NodePartShift::EndPin;
                         int endNode = link.end_attr >> NodePartShift::InputPin;
@@ -123,7 +128,7 @@ namespace storyteller
                     }
                 }
 
-                ImGui::Text("next_node_id: %d", next_node_id);
+                ImGui::Text("info: next_node_id: %d | window width: %f | window height: %f", next_node_id, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
                 ImGui::End();
             }
 
@@ -145,25 +150,65 @@ namespace storyteller
                 }
             }
 
+            std::vector<int> GetConnectedLinks(int node_id) {
+                std::vector<int> resIds;
+                for (const auto& pair : links) {
+                    Link* link = pair.second;
+                    if (link->EndsWithNode(node_id) || link->StartsWithNode(node_id)) {
+                        resIds.push_back(link->id);
+                    }
+                }
+                return resIds;
+            }
+
             /******************************************************************************
              *                   Node creation/removal logic
              ******************************************************************************/
 
             void AddNode(const char* text, ImVec2 pos, NodeType type)
             {
-                std::shared_ptr<Node> node;
+                Node* node;
                 switch (type)
                 {
                 case NodeType::Speech:
-                    node = std::make_shared<SpeechNode>(++next_node_id, text, pos);
+                    node = new SpeechNode(++next_node_id, text, pos);
                     break;
                 case NodeType::Response:
-                    node = std::make_shared<ResponseNode>(++next_node_id, text, pos);
+                    node = new ResponseNode(++next_node_id, text, pos);
                     break;
                 }
 
                 ImNodes::SetNodeScreenSpacePos(node->id, node->position);
-                nodes.push_back(node);
+                nodes[node->id] = node;
+            }
+
+            void HandleNodeRemoval() {
+                const int num_nodes_selected = ImNodes::NumSelectedNodes();
+                if (num_nodes_selected > 0 && (ImGui::IsKeyReleased(ImGuiKey_Delete)))
+                {
+                    int* selected_nodes = new int[num_nodes_selected];
+                    ImNodes::GetSelectedNodes(selected_nodes);
+                    if (selected_nodes) {
+                        for (int i = 0; i < num_nodes_selected; ++i) {
+
+                            int node_id = selected_nodes[i];
+
+                            // user shouldn't remove the root node
+                            if (node_id == 0) {
+                                continue;
+                            }
+
+                            // delete every related link
+                            for (int link_id : GetConnectedLinks(node_id)) {
+                                links.erase(link_id);
+                            }
+
+                            nodes.erase(node_id);
+
+                        }
+                        delete[] selected_nodes;
+                    }
+                }
             }
 
             // Visual creation and insertion in UI grid
@@ -190,17 +235,30 @@ namespace storyteller
                 ImNodes::BeginStaticAttribute(node_id << 16);
                 ImGui::PushItemWidth(200.0f);
                 ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 4.0f));
-                assert(node_id < nodes.size());
-                ImGui::InputText("Text", &nodes[node_id]->text);
+                if (nodes.find(node_id) != nodes.end() && nodes[node_id] != nullptr) {
+                    ImGui::InputText("Text", &nodes[node_id]->text);
+                }
+                else {
+                    // Handle the case where the node is not found or is not initialized
+                    std::cerr << "Node with id " << node_id << " is not initialized." << std::endl;
+                }
                 ImGui::PopStyleVar();
                 ImGui::PopItemWidth();
                 ImNodes::EndStaticAttribute();
 
                 // checkbox
-                assert(node_id < nodes.size());
                 if (nodes[node_id]->nodeType == NodeType::Speech)
                 {
-                    ImGui::Checkbox("Expects response", &nodes[node_id]->AsSpeech()->expectesResponse);
+                    if (nodes[node_id]->AsSpeech()->nextNodeId == -1) 
+                    {
+                        ImGui::Checkbox("Expects response", &nodes[node_id]->AsSpeech()->expectesResponse);
+                    }
+                    else 
+                    {
+                        ImGui::BeginDisabled();
+                        ImGui::Checkbox("Expects response", &nodes[node_id]->AsSpeech()->expectesResponse);
+                        ImGui::EndDisabled();
+                    }
                 }
 
                 // Create a row for input and output pins
@@ -223,6 +281,7 @@ namespace storyteller
 
                 ImNodes::PopColorStyle();
                 ImNodes::PopColorStyle();
+
             }
 
             /******************************************************************************
@@ -233,6 +292,12 @@ namespace storyteller
 
         static StoryTellerNodeEditor editor;
     } // namespace
+
+    void InitializeConversation()
+    {
+        // spawn root node of conversation
+        editor.AddNode("Conversation starter", ImVec2(150, ImGui::GetWindowSize().y / 1.2), NodeType::Speech);
+    }
 
     void NodeEditorInitialize()
     {
@@ -247,9 +312,7 @@ namespace storyteller
 
         style.NodePadding = ImVec2(8.0f, 8.0f);
         style.NodeCornerRounding = 4.0f;
-        style.NodeBorderThickness = 1.0f;
-
-        editor.AddNode("Conversation starter", ImVec2(0, 0), NodeType::Speech);
+        style.NodeBorderThickness = 1.0f;   
     }
 
     void NodeEditorShow() { editor.show(); }

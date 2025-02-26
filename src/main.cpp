@@ -12,7 +12,7 @@ int main(int, char**) {
         return -1;
     }
 
-    SDL_Window* window = SDL_CreateWindow("StoryTeller - Dialog Editor", 1280, 720, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    SDL_Window* window = SDL_CreateWindow("StoryTeller - Dialog Editor", 1440, 900, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
     if (!window) {
         printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
         return -1;
@@ -40,6 +40,7 @@ int main(int, char**) {
     ImGui_ImplSDLRenderer3_Init(renderer);
 
     bool done = false;
+    bool hasRootSpawned = false;
     while (!done) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
@@ -53,6 +54,10 @@ int main(int, char**) {
         ImGui::NewFrame();
 
         storyteller::NodeEditorShow();
+        if (!hasRootSpawned) {
+            hasRootSpawned = true;
+            storyteller::InitializeConversation();
+        }
 
         ImGui::Render();
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
