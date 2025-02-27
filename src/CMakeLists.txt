@@ -4,6 +4,8 @@ add_executable(storyteller
 	main.cpp
 	Node.h
 	storyteller.cpp
+    show_windows.h
+    show_windows.cpp
     resources/resource.rc
 )
 target_link_libraries(storyteller

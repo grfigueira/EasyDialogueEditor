@@ -5,9 +5,9 @@
 #include <vector>
 #include "imgui_stdlib.h"
 #include <iostream>
-#include <cassert>
 #include "Node.h"
-#include <map>
+#include "show_windows.h"
+#include <unordered_map>
 
 #define LOG(x) std::cout << x << std::endl;
 
@@ -17,7 +17,9 @@
 
 namespace storyteller
 {
-	namespace
+	// Anonymous namespace
+	// makes the 'StoryTellerNodeEditor editor' instance global in this cpp file only
+	namespace 
 	{
 
 		class StoryTellerNodeEditor
@@ -25,8 +27,8 @@ namespace storyteller
 		private:
 
 			// Current state data
-			std::map<int, Node*>                 nodes; // these don't need to be pointers at all
-			std::map<int, Link*>                 links;
+			std::unordered_map<int, Node*>                 nodes;
+			std::unordered_map<int, Link*>                 links;
 			int                                next_node_id = -1;
 			int                                next_link_id = -1;
 			static const char* NodeTypeStrings[];
@@ -36,21 +38,43 @@ namespace storyteller
 			// runs every frame
 			void show()
 			{
-				// Get the screen size from ImGui
+				//ImGui::ShowDemoWindow();
 				ImGuiIO& io = ImGui::GetIO();
+				ImGuiViewport* viewport = ImGui::GetMainViewport();
 
-				// Set the next window to fullscreen
-				ImGui::SetNextWindowPos(ImVec2(0, 0));
-				ImGui::SetNextWindowSize(io.DisplaySize);
+				ImGui::SetNextWindowPos(viewport->Pos);
+				ImGui::SetNextWindowSize(viewport->Size);
+				ImGui::SetNextWindowViewport(viewport->ID);
 
-				ImGui::Begin("StoryTeller", 0, ImGuiWindowFlags_::ImGuiWindowFlags_NoScrollbar |
+				ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
+					ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
+					ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+
+				window_flags |= ImGuiWindowFlags_NoDocking;
+
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+
+				ImGui::Begin("MainDockspace", nullptr, window_flags);
+				ImGui::PopStyleVar(3);
+
+				ImGuiID dockspace_id = ImGui::GetID("MainDockspace");
+				ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_None);
+
+				ImGui::End();
+
+				ImGui::Begin("Graph Editor", 0, ImGuiWindowFlags_::ImGuiWindowFlags_NoResize |
 					ImGuiWindowFlags_::ImGuiWindowFlags_NoTitleBar |
 					ImGuiWindowFlags_::ImGuiWindowFlags_NoCollapse |
-					ImGuiWindowFlags_::ImGuiWindowFlags_NoResize);
+					ImGuiWindowFlags_::ImGuiWindowFlags_NoScrollbar |
+					ImGuiWindowFlags_::ImGuiWindowFlags_NoMove);
+
+				otherwindows::ShowMenuBar();
+
 				HandleNodeRemoval();
 
 				ImNodes::BeginNodeEditor();
-
 
 				/******************************************************************************
 				 *             Draw every node and link from current state
@@ -59,13 +83,17 @@ namespace storyteller
 					for (const auto& pair : nodes)
 					{
 						Node* node = pair.second;
-						CreateNode(node->id, NodeTypeStrings[node->nodeType]);
+						if (node) {
+							CreateNode(node->id, NodeTypeStrings[node->nodeType]);
+						}
 					}
 
 					for (const auto& pair : links)
 					{
 						Link* link = pair.second;
-						ImNodes::Link(link->id, link->start_attr, link->end_attr);
+						if (link) {
+							ImNodes::Link(link->id, link->start_attr, link->end_attr);
+						}
 					}
 				}
 
@@ -74,11 +102,13 @@ namespace storyteller
 				ImNodes::EndNodeEditor();
 
 				/******************************************************************************
-				 *                   What to do when a link is dropped
+				 *                   Create node when link is dropped
 				 ******************************************************************************/
+
 				HandleLinkDropped();
 
 				// Handle link creation between two already existing nodes
+				// TODO: not working right now
 				{
 					Link link;
 					if (ImNodes::IsLinkCreated(&link.start_attr, &link.end_attr))
@@ -98,9 +128,11 @@ namespace storyteller
 					}
 				}
 
-				ImGui::Text("info: next_node_id: %d | window width: %f | window height: %f", next_node_id, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
 				ImGui::End();
-			}
+
+				otherwindows::ShowGraphInfoWindow();
+				otherwindows::ShowSelectedNodeInfoWindow();
+			}	
 
 			void HandleLinkDropped()
 			{
@@ -170,6 +202,7 @@ namespace storyteller
 			 *                   Node creation/removal logic
 			 ******************************************************************************/
 
+			// addition of node to data structure
 			Node* AddNode(const char* text, ImVec2 pos, NodeType type)
 			{
 				pos.y -= 110.f;
@@ -221,6 +254,7 @@ namespace storyteller
 								if (node->nextNodeId != -1) {
 									if (Node* next_node = nodes[node->nextNodeId]) {
 										next_node->prevNodeId = -1;
+										std::cout << "next_node info: " << next_node->id << "\n";
 									}
 								}
 							}
@@ -233,7 +267,7 @@ namespace storyteller
 				}
 			}
 
-			// Visual creation and insertion in UI grid
+			// Visual creation and insertion in grid
 			void CreateNode(int node_id, const char* HeaderText)
 			{
 				ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(66, 150, 250, 255));
@@ -241,7 +275,7 @@ namespace storyteller
 
 				ImNodes::BeginNode(node_id);
 
-				// Header
+				// header
 				ImNodes::BeginNodeTitleBar();
 				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2.0f, 2.0f));
 				ImGui::Dummy(ImVec2(0.0f, 0.6f));
@@ -250,10 +284,10 @@ namespace storyteller
 				ImGui::PopStyleVar();
 				ImNodes::EndNodeTitleBar();
 
-				// Add some spacing between title and content
+				// spacing
 				ImGui::Dummy(ImVec2(0.0f, 4.0f));
 
-				// Text input
+				// text input
 				ImNodes::BeginStaticAttribute(node_id << 16);
 				ImGui::PushItemWidth(200.0f);
 				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 4.0f));
@@ -283,7 +317,6 @@ namespace storyteller
 					}
 				}
 
-				// Create a row for input and output pins
 				ImGui::Dummy(ImVec2(0.0f, 4.0f));
 
 				// input pin
@@ -304,6 +337,10 @@ namespace storyteller
 				ImNodes::PopColorStyle();
 				ImNodes::PopColorStyle();
 
+			}
+
+			const std::unordered_map<int, Node*>& GetNodesMap() const {
+				return nodes;
 			}
 
 			/******************************************************************************
@@ -341,4 +378,34 @@ namespace storyteller
 
 	void NodeEditorShutdown() {}
 
-} // namespace example
+	/*************************************
+	*               Getters
+	**************************************/
+
+	std::vector<Node*> GetNodesVec() {
+		const auto& nodesMap = editor.GetNodesMap();
+
+		std::vector<Node*> nodes;
+		nodes.reserve(nodesMap.size());
+
+		for (auto& pair : nodesMap) {
+			nodes.push_back(pair.second);
+		}
+		return nodes;
+	}
+
+	int GetNumNodesOfType(NodeType type) {
+		const auto& nodesMap = editor.GetNodesMap();
+		int res = 0;
+
+		for (auto& pair : nodesMap) {
+			if (pair.second) {
+				if (pair.second->nodeType == type) {
+					res++;
+				}
+			}
+		}
+		return res;
+	}
+
+} // namespace storyteller

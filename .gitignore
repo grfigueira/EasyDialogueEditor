@@ -2,6 +2,7 @@
 /build/
 /out/
 /CMakeFiles/
+/_deps/
 CMakeCache.txt
 *.cmake.stamp
 *.dir/
