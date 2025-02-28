@@ -9,6 +9,7 @@
 #include "show_windows.h"
 #include <unordered_map>
 #include <imgui_internal.h>
+#include <format>
 
 #define LOG(x) std::cout << x << std::endl;
 
@@ -20,7 +21,7 @@ namespace storyteller
 {
 	// Anonymous namespace
 	// makes the 'StoryTellerNodeEditor editor' instance global in this cpp file only
-	namespace 
+	namespace
 	{
 
 		class StoryTellerNodeEditor
@@ -33,14 +34,16 @@ namespace storyteller
 			int                                next_node_id = -1;
 			int                                next_link_id = -1;
 			static const char* NodeTypeStrings[];
-			ViewTransform view;
+			bool bShowDemoWindow = false;
 
 		public:
 
 			// runs every frame
 			void show()
 			{
-				ImGui::ShowDemoWindow();
+				if (bShowDemoWindow) {
+					ImGui::ShowDemoWindow();
+				}
 				ImGuiIO& io = ImGui::GetIO();
 				ImGuiViewport* viewport = ImGui::GetMainViewport();
 
@@ -78,13 +81,6 @@ namespace storyteller
 
 				ImNodes::BeginNodeEditor();
 
-				if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) {
-					const float wheel_delta = ImGui::GetIO().MouseWheel;
-					if (wheel_delta != 0.0f) {
-						HandleZooming(wheel_delta);
-					}
-				}
-
 				/******************************************************************************
 				 *             Draw every node and link from current state
 				 ******************************************************************************/
@@ -93,7 +89,8 @@ namespace storyteller
 					{
 						Node* node = pair.second;
 						if (node) {
-							DrawNode(node->id, NodeTypeStrings[node->nodeType]);
+							 std::string header_text = std::format("{} | id: {}", NodeTypeStrings[node->nodeType], node->id);
+							DrawNode(node->id, header_text.c_str());
 						}
 					}
 
@@ -114,33 +111,47 @@ namespace storyteller
 				 *                   Create node when link is dropped
 				 ******************************************************************************/
 
-				HandleLinkDropped();
 
-				// Handle link creation between two already existing nodes
-				// TODO: not working right now
+				 // Handle link creation between two already existing nodes
+				 // TODO: not working right now
+
+				int start_attr, end_attr;
+				if (ImNodes::IsLinkCreated(&start_attr, &end_attr))
 				{
-					Link link;
-					if (ImNodes::IsLinkCreated(&link.start_attr, &link.end_attr))
-					{
-						link.id = ++next_link_id;
-						links[link.id] = &link;
-						//links.push_back(link);
-
-						int startNode = link.start_attr >> NodePartShift::EndPin;
-						int endNode = link.end_attr >> NodePartShift::InputPin;
-						assert(startNode < nodes.size());
-						assert(endNode < nodes.size());
-						if (nodes[startNode]->nodeType == NodeType::Speech)
-						{
-							nodes[startNode]->AsSpeech()->nextNodeId = endNode;
-						}
-					}
+					HandleLinkManualCreation(start_attr, end_attr);
+				}
+				else {
+					HandleLinkDropped();
 				}
 
 				ImGui::End();
 
 				otherwindows::ShowGraphInfoWindow();
-			}	
+			}
+
+			void HandleLinkManualCreation(int start_attr, int end_attr)
+			{
+				int start_node_id = start_attr >> NodePartShift::EndPin;
+				int end_node_id = end_attr >> NodePartShift::InputPin;
+
+				if (SpeechNode* start_speech_node = nodes[start_node_id]->AsSpeech()) {
+					if (ResponseNode* end_response_node = nodes[end_node_id]->AsResponse()) {
+						if (!start_speech_node->expectesResponse) {
+							return;
+						}
+						else {
+							start_speech_node->responses.push_back(end_node_id);
+							end_response_node->prevNodeId = start_node_id;
+						}
+					}
+					else {
+						start_speech_node->nextNodeId = end_node_id;
+					}
+				}
+				Link* link = new Link{ ++next_link_id, start_attr, end_attr };
+				links[link->id] = link;
+
+			}
 
 			void HandleLinkDropped()
 			{
@@ -210,7 +221,7 @@ namespace storyteller
 			 *                   Node creation/removal logic
 			 ******************************************************************************/
 
-			// addition of node to data structure
+			 // addition of node to data structure
 			Node* AddNode(const char* text, ImVec2 pos, NodeType type)
 			{
 				pos.y -= 110.f;
@@ -252,19 +263,29 @@ namespace storyteller
 								links.erase(link_id);
 							}
 
-							std::cout << "Deleting node " << node_id << " with prevNodeId " << nodes[node_id]->prevNodeId << "\n";
-							
 							// TODO i should change all these pointers to shared pointers
 							if (Node* node = nodes[node_id]) {
+
 								if (Node* prev_node = nodes[node->prevNodeId]) {
 									prev_node->nextNodeId = -1;
+
+									if (node->nodeType == NodeType::Response) {
+										if (SpeechNode* prev_speech_node = prev_node->AsSpeech()) {
+											std::vector<int>& responses = prev_speech_node->responses;
+											responses.erase(std::remove(responses.begin(), responses.end(), node_id), responses.end());
+										}
+									}
 								}
+
 								if (node->nextNodeId != -1) {
 									if (Node* next_node = nodes[node->nextNodeId]) {
 										next_node->prevNodeId = -1;
 										std::cout << "next_node info: " << next_node->id << "\n";
 									}
 								}
+
+
+
 							}
 
 							nodes.erase(node_id);
@@ -278,87 +299,86 @@ namespace storyteller
 			// Visual creation and insertion in grid
 			void DrawNode(int node_id, const char* HeaderText, float scale = 1.0f)
 			{
-				ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(66, 150, 250, 255));
-				ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(86, 170, 255, 255));
-
-				ImNodes::BeginNode(node_id);
-
-				// header
-				ImNodes::BeginNodeTitleBar();
-				ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2.0f, 2.0f));
-				ImGui::Dummy(ImVec2(0.0f, 0.6f));
-				ImGui::TextUnformatted(HeaderText);
-				ImGui::Dummy(ImVec2(0.0f, 0.6f));
-				ImGui::PopStyleVar();
-				ImNodes::EndNodeTitleBar();
-
-				// spacing
-				ImGui::Dummy(ImVec2(0.0f, 4.0f));
-
-				// text input
-				ImNodes::BeginStaticAttribute(node_id << 16);
-				ImGui::PushItemWidth(200.0f);
-				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 4.0f));
-				if (nodes.find(node_id) != nodes.end() && nodes[node_id] != nullptr) {
-					ImGui::InputText("Text", &nodes[node_id]->text);
-				}
-				else {
-					// Handle the case where the node is not found or is not initialized
-					std::cerr << "Node with id " << node_id << " is not initialized." << std::endl;
-				}
-				ImGui::PopStyleVar();
-				ImGui::PopItemWidth();
-				ImNodes::EndStaticAttribute();
-
-				// checkbox
-				if (nodes[node_id]->nodeType == NodeType::Speech)
+				Node* node = nodes[node_id];
+				if (node)
 				{
-					if (nodes[node_id]->nextNodeId == -1)
-					{
-						ImGui::Checkbox("Expects response", &nodes[node_id]->AsSpeech()->expectesResponse);
+
+					ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(66, 150, 250, 255));
+					ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(86, 170, 255, 255));
+
+					ImNodes::BeginNode(node_id);
+
+					// header
+					ImNodes::BeginNodeTitleBar();
+					ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2.0f, 2.0f));
+					ImGui::Dummy(ImVec2(0.0f, 0.6f));
+					ImGui::TextUnformatted(HeaderText);
+					ImGui::Dummy(ImVec2(0.0f, 0.6f));
+					ImGui::PopStyleVar();
+					ImNodes::EndNodeTitleBar();
+
+					// spacing
+					//ImGui::Dummy(ImVec2(0.0f, 4.0f));
+
+					// text input
+					ImNodes::BeginStaticAttribute(node_id << 16);
+					ImGui::PushItemWidth(200.0f);
+					ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 4.0f));
+					if (nodes.find(node_id) != nodes.end() && nodes[node_id] != nullptr) {
+						ImGui::InputText("Text", &nodes[node_id]->text);
 					}
-					else
-					{
-						ImGui::BeginDisabled();
-						ImGui::Checkbox("Expects response", &nodes[node_id]->AsSpeech()->expectesResponse);
-						ImGui::EndDisabled();
+					else {
+						// Handle the case where the node is not found or is not initialized
+						std::cerr << "Node with id " << node_id << " is not initialized." << std::endl;
 					}
+					ImGui::PopStyleVar();
+					ImGui::PopItemWidth();
+					ImNodes::EndStaticAttribute();
+
+					// checkbox
+					if (nodes[node_id]->nodeType == NodeType::Speech)
+					{
+						SpeechNode* speech_node = nodes[node_id]->AsSpeech();
+						if (speech_node->nextNodeId == -1 && speech_node->responses.empty())
+						{
+							ImGui::Checkbox("Expects response", &nodes[node_id]->AsSpeech()->expectesResponse);
+						}
+						else
+						{
+							ImGui::BeginDisabled();
+							ImGui::Checkbox("Expects response", &nodes[node_id]->AsSpeech()->expectesResponse);
+							ImGui::EndDisabled();
+						}
+					}
+
+					ImGui::Dummy(ImVec2(0.0f, 4.0f));
+
+					// input pin
+					ImNodes::BeginInputAttribute(node_id << 8);
+					ImGui::TextUnformatted("input");
+					ImNodes::EndInputAttribute();
+
+					// output pin
+					ImGui::SameLine(200);
+					ImNodes::BeginOutputAttribute(node_id << 24);
+					ImGui::TextUnformatted("output");
+					ImNodes::EndOutputAttribute();
+
+					ImGui::Dummy(ImVec2(0.0f, 4.0f));
+
+					ImNodes::EndNode();
+
+					ImNodes::PopColorStyle();
+					ImNodes::PopColorStyle();
 				}
-
-				ImGui::Dummy(ImVec2(0.0f, 4.0f));
-
-				// input pin
-				ImNodes::BeginInputAttribute(node_id << 8);
-				ImGui::TextUnformatted("input");
-				ImNodes::EndInputAttribute();
-
-				// output pin
-				ImGui::SameLine(200);
-				ImNodes::BeginOutputAttribute(node_id << 24);
-				ImGui::TextUnformatted("output");
-				ImNodes::EndOutputAttribute();
-
-				ImGui::Dummy(ImVec2(0.0f, 4.0f));
-
-				ImNodes::EndNode();
-
-				ImNodes::PopColorStyle();
-				ImNodes::PopColorStyle();
-
-			}
-
-			// Add to your StoryTellerNodeEditor class
-			struct ViewTransform {
-				float zoom = 1.0f;
-				ImVec2 offset = ImVec2(0.0f, 0.0f);
-			};
-
-			void HandleZooming(float wheel_delta) {
-				// TODO
 			}
 
 			const std::unordered_map<int, Node*>& GetNodesMap() const {
 				return nodes;
+			}
+
+			void ToggleDemoWindow() {
+				bShowDemoWindow = !bShowDemoWindow;
 			}
 
 			/******************************************************************************
@@ -429,5 +449,9 @@ namespace storyteller
 	/*************************************
 	*               Others
 	**************************************/
+
+	void ToggleDemoWindow() {
+		editor.ToggleDemoWindow();
+	}
 
 } // namespace storyteller

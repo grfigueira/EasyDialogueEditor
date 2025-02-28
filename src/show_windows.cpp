@@ -18,6 +18,10 @@ namespace otherwindows {
 		}
 		if (ImGui::BeginMenu("Window")) {
 			if (ImGui::MenuItem("Reset layout")) {}
+			if (ImGui::MenuItem("Toggle Demo Window")) 
+			{
+				storyteller::ToggleDemoWindow();
+			}
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Help")) {
@@ -62,13 +66,18 @@ namespace otherwindows {
 					ss << "}";
 					//char* info;
 					//std::sprintf(&info, "{ id: %d ; type: Speech ; next_node_id: %d ; expected_responses: %s }", node->id, node->nextNodeId, ss.str().c_str());
-					raw_info += std::format("[{{ id: {} ; type: Speech ; next_node_id: {} ; expected_responses: {} }} ; ",
+					raw_info += std::format("[{{ \"id\": \"{}\" ; \"type\": \"Speech\" ; \"next_node_id\": \"{}\" ; \"expected_responses\": \"{}\" }} ; ",
 						node->id, node->nextNodeId, ss.str());
 					ImGui::Text("Node %d: {\n  \"id\": \"%d\",\n  \"type\": \"Speech\",\n  \"next_node_id\": \"%d\",\n  \"expected_responses\": \"%s\"\n}", node->id, node->id, node->nextNodeId, ss.str().c_str());
 
 				}
 				if (ResponseNode* response_node = node->AsResponse()) {
-					ImGui::Text("some response here lol");
+
+					raw_info += std::format("[{{ \"id\": \"{}\" ; \"type\": \"Response\" ; \"next_node_id\": \"{}\" }} ; ",
+						node->id, node->nextNodeId);
+
+					ImGui::Text("Node %d: {\n  \"id\": \"%d\",\n  \"type\": \"Response\",\n  \"next_node_id\": \"%d\"\n}", node->id, node->id, node->nextNodeId);
+
 				}
 				ImGui::Dummy(ImVec2(0.0f, 2.0f));
 			}

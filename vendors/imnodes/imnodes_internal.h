@@ -282,11 +282,13 @@ struct ImNodesEditorContext
     ImRect MiniMapContentScreenSpace;
     float  MiniMapScaling;
 
+    float zoom;
+
     ImNodesEditorContext()
         : Nodes(), Pins(), Links(), Panning(0.f, 0.f), SelectedNodeIndices(), SelectedLinkIndices(),
           SelectedNodeOffsets(), PrimaryNodeOffset(0.f, 0.f), ClickInteraction(),
           MiniMapEnabled(false), MiniMapSizeFraction(0.0f), MiniMapNodeHoveringCallback(NULL),
-          MiniMapNodeHoveringCallbackUserData(NULL), MiniMapScaling(0.0f)
+          MiniMapNodeHoveringCallbackUserData(NULL), MiniMapScaling(0.0f), zoom(1.0f)
     {
     }
 };

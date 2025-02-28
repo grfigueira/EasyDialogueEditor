@@ -9,4 +9,5 @@ void NodeEditorShutdown();
 void InitializeConversation();
 std::vector<Node*> GetNodesVec();
 int GetNumNodesOfType(NodeType type);
-} // namespace example
+void ToggleDemoWindow();
+} // namespace storyteller

@@ -44,7 +44,6 @@ struct Node
 struct SpeechNode : public Node
 {
     std::vector<int> responses;
-    int              nextNodeId;
     bool             expectesResponse;
 
     SpeechNode(int nodeId, const std::string& speechText, ImVec2 pos)
@@ -96,10 +95,5 @@ struct Link
     bool EndsWithNode(int endNodeId) {
         return end_attr == endNodeId << NodePartShift::InputPin;
     }
-};
-
-struct ViewTransform {
-    float zoom = 1.0f;
-    ImVec2 offset = { 0, 0 };
 };
 
