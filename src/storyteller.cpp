@@ -1,3 +1,14 @@
+/******************************************************************************
+ * Copyright (c) 2025 Guilherme Figueira
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Contact: g.figueira.2002@gmail.com
+ ******************************************************************************/
+
 #include "node_editor.h"
 #include "imnodes.h"
 #include <imgui.h>
@@ -14,7 +25,7 @@
 #define LOG(x) std::cout << x << std::endl;
 
 /******************************************************************************
- *                   StoryTeller - Main File
+ *                   StoryTeller - Main file
  ******************************************************************************/
 
 namespace storyteller
