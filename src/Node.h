@@ -98,3 +98,8 @@ struct Link
     }
 };
 
+struct ViewTransform {
+    float zoom = 1.0f;
+    ImVec2 offset = { 0, 0 };
+};
+

@@ -52,24 +52,26 @@ namespace otherwindows {
 		std::string raw_info = "";
 
 		for (Node* node : nodes) {
-			if (SpeechNode* speech_node = node->AsSpeech()) {
-				std::stringstream ss;
-				ss << "{";
-				for (int response : speech_node->responses) {
-					ss << " " << response << " ";
+			if (node) {
+				if (SpeechNode* speech_node = node->AsSpeech()) {
+					std::stringstream ss;
+					ss << "{";
+					for (int response : speech_node->responses) {
+						ss << " " << response << " ";
+					}
+					ss << "}";
+					//char* info;
+					//std::sprintf(&info, "{ id: %d ; type: Speech ; next_node_id: %d ; expected_responses: %s }", node->id, node->nextNodeId, ss.str().c_str());
+					raw_info += std::format("[{{ id: {} ; type: Speech ; next_node_id: {} ; expected_responses: {} }} ; ",
+						node->id, node->nextNodeId, ss.str());
+					ImGui::Text("Node %d: {\n  \"id\": \"%d\",\n  \"type\": \"Speech\",\n  \"next_node_id\": \"%d\",\n  \"expected_responses\": \"%s\"\n}", node->id, node->id, node->nextNodeId, ss.str().c_str());
+
 				}
-				ss << "}";
-				//char* info;
-				//std::sprintf(&info, "{ id: %d ; type: Speech ; next_node_id: %d ; expected_responses: %s }", node->id, node->nextNodeId, ss.str().c_str());
-				raw_info += std::format("[{{ id: {} ; type: Speech ; next_node_id: {} ; expected_responses: {} }} ; ", 
-                      node->id, node->nextNodeId, ss.str());
-				ImGui::Text("Node %d: {\n  \"id\": \"%d\",\n  \"type\": \"Speech\",\n  \"next_node_id\": \"%d\",\n  \"expected_responses\": \"%s\"\n}", node->id, node->id, node->nextNodeId, ss.str().c_str());
-				
+				if (ResponseNode* response_node = node->AsResponse()) {
+					ImGui::Text("some response here lol");
+				}
+				ImGui::Dummy(ImVec2(0.0f, 2.0f));
 			}
-			if (ResponseNode* response_node = node->AsResponse()) {
-				ImGui::Text("some response here lol");
-			}
-			ImGui::Dummy(ImVec2(0.0f, 2.0f));
 		}
 		raw_info += "]";
 
@@ -89,10 +91,4 @@ namespace otherwindows {
 		ImGui::End();
 	}
 
-	void ShowSelectedNodeInfoWindow()
-	{
-		ImGui::Begin("Node Info");
-		ImGui::Text("No node selected");
-		ImGui::End();
-	}
 }

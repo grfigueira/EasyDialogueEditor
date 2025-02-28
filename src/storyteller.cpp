@@ -8,6 +8,7 @@
 #include "Node.h"
 #include "show_windows.h"
 #include <unordered_map>
+#include <imgui_internal.h>
 
 #define LOG(x) std::cout << x << std::endl;
 
@@ -32,13 +33,14 @@ namespace storyteller
 			int                                next_node_id = -1;
 			int                                next_link_id = -1;
 			static const char* NodeTypeStrings[];
+			ViewTransform view;
 
 		public:
 
 			// runs every frame
 			void show()
 			{
-				//ImGui::ShowDemoWindow();
+				ImGui::ShowDemoWindow();
 				ImGuiIO& io = ImGui::GetIO();
 				ImGuiViewport* viewport = ImGui::GetMainViewport();
 
@@ -76,6 +78,13 @@ namespace storyteller
 
 				ImNodes::BeginNodeEditor();
 
+				if (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()) {
+					const float wheel_delta = ImGui::GetIO().MouseWheel;
+					if (wheel_delta != 0.0f) {
+						HandleZooming(wheel_delta);
+					}
+				}
+
 				/******************************************************************************
 				 *             Draw every node and link from current state
 				 ******************************************************************************/
@@ -84,7 +93,7 @@ namespace storyteller
 					{
 						Node* node = pair.second;
 						if (node) {
-							CreateNode(node->id, NodeTypeStrings[node->nodeType]);
+							DrawNode(node->id, NodeTypeStrings[node->nodeType]);
 						}
 					}
 
@@ -131,7 +140,6 @@ namespace storyteller
 				ImGui::End();
 
 				otherwindows::ShowGraphInfoWindow();
-				otherwindows::ShowSelectedNodeInfoWindow();
 			}	
 
 			void HandleLinkDropped()
@@ -268,7 +276,7 @@ namespace storyteller
 			}
 
 			// Visual creation and insertion in grid
-			void CreateNode(int node_id, const char* HeaderText)
+			void DrawNode(int node_id, const char* HeaderText, float scale = 1.0f)
 			{
 				ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(66, 150, 250, 255));
 				ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(86, 170, 255, 255));
@@ -339,6 +347,16 @@ namespace storyteller
 
 			}
 
+			// Add to your StoryTellerNodeEditor class
+			struct ViewTransform {
+				float zoom = 1.0f;
+				ImVec2 offset = ImVec2(0.0f, 0.0f);
+			};
+
+			void HandleZooming(float wheel_delta) {
+				// TODO
+			}
+
 			const std::unordered_map<int, Node*>& GetNodesMap() const {
 				return nodes;
 			}
@@ -407,5 +425,9 @@ namespace storyteller
 		}
 		return res;
 	}
+
+	/*************************************
+	*               Others
+	**************************************/
 
 } // namespace storyteller
