@@ -35,7 +35,7 @@ namespace storyteller
 		private:
 
 			// Current state data
-			std::unordered_map<int, Node*>                 nodes;
+			std::unordered_map<int, Node*>                 nodes; // maybe these should be smart pointers?
 			std::unordered_map<int, Link*>                 links;
 			int                                next_node_id = -1;
 			int                                next_link_id = -1;
@@ -113,13 +113,9 @@ namespace storyteller
 
 				ImNodes::EndNodeEditor();
 
-				/******************************************************************************
-				 *                   Create node when link is dropped
-				 ******************************************************************************/
-
-
-				 // Handle link creation between two already existing nodes
-				 // TODO: not working right now
+				/***************************************************
+				 *                   Handle links
+				 **************************************************/
 
 				int start_attr, end_attr;
 				if (ImNodes::IsLinkCreated(&start_attr, &end_attr))
@@ -135,6 +131,7 @@ namespace storyteller
 				otherwindows::ShowGraphInfoWindow();
 			}
 
+			// executed if user link two already existing nodes
 			void HandleLinkManualCreation(int start_attr, int end_attr)
 			{
 				int start_node_id = start_attr >> NodePartShift::EndPin;
@@ -159,6 +156,7 @@ namespace storyteller
 
 			}
 
+			// create new node when dropping a link on empty space
 			void HandleLinkDropped()
 			{
 				int started_attr;
@@ -193,7 +191,8 @@ namespace storyteller
 					}
 				}
 			}
-
+			
+			[[deprecated("Creating nodes now works by dropping links")]]
 			void ShowNodeCreationPopup()
 			{
 				if (ImGui::BeginPopup("Add node"))
@@ -227,7 +226,7 @@ namespace storyteller
 			 *                   Node creation/removal logic
 			 ******************************************************************************/
 
-			 // addition of node to data structure
+			 // addition of node to state data
 			Node* AddNode(const char* text, ImVec2 pos, NodeType type)
 			{
 				pos.y -= 110.f;
@@ -247,7 +246,7 @@ namespace storyteller
 				nodes[node->id] = node;
 				return node;
 			}
-
+			
 			void HandleNodeRemoval() {
 				const int num_nodes_selected = ImNodes::NumSelectedNodes();
 				if (num_nodes_selected > 0 && (ImGui::IsKeyReleased(ImGuiKey_Delete)))
@@ -269,7 +268,6 @@ namespace storyteller
 								links.erase(link_id);
 							}
 
-							// TODO i should change all these pointers to shared pointers
 							if (Node* node = nodes[node_id]) {
 
 								if (Node* prev_node = nodes[node->prevNodeId]) {
@@ -290,8 +288,6 @@ namespace storyteller
 									}
 								}
 
-
-
 							}
 
 							nodes.erase(node_id);
@@ -302,8 +298,8 @@ namespace storyteller
 				}
 			}
 
-			// Visual creation and insertion in grid
-			void DrawNode(int node_id, const char* HeaderText, float scale = 1.0f)
+			// Renders a node on the grid
+			void DrawNode(int node_id, const char* HeaderText, float scale = /*currently not being used*/ 1.0f)
 			{
 				Node* node = nodes[node_id];
 				if (node)
@@ -324,7 +320,7 @@ namespace storyteller
 					ImNodes::EndNodeTitleBar();
 
 					// spacing
-					//ImGui::Dummy(ImVec2(0.0f, 4.0f));
+					ImGui::Dummy(ImVec2(0.0f, 4.0f));
 
 					// text input
 					ImNodes::BeginStaticAttribute(node_id << 16);
