@@ -72,9 +72,9 @@ namespace otherwindows {
 					ss << "}";
 					//char* info;
 					//std::sprintf(&info, "{ id: %d ; type: Speech ; next_node_id: %d ; expected_responses: %s }", node->id, node->nextNodeId, ss.str().c_str());
-					raw_info += std::format("[{{ \"id\": \"{}\" ; \"type\": \"Speech\" ; \"next_node_id\": \"{}\" ; \"expected_responses\": \"{}\" }} ; ",
+					raw_info += std::format("[{{ \"id\": \"{}\" ; \"type\": \"Speech\" ; \"next_node_id\": \"{}\" ; \"expected_responses\": \"{}\" }} ; ",	
 						node->id, node->nextNodeId, ss.str());
-					ImGui::Text("Node %d: {\n  \"id\": \"%d\",\n  \"type\": \"Speech\",\n  \"next_node_id\": \"%d\",\n  \"expected_responses\": \"%s\"\n}", node->id, node->id, node->nextNodeId, ss.str().c_str());
+					ImGui::Text(std::format("Node {}: {{\n  \"id\": \"{}\",\n  \"type\": \"Speech\",\n \"text\": \"{}\",\n  \"next_node_id\": \"{}\",\n  \"expected_responses\": \"{}\"\n}}", node->id, node->id, node->text.c_str(), node->nextNodeId, ss.str().c_str()).c_str());
 
 				}
 				if (ResponseNode* response_node = node->AsResponse()) {

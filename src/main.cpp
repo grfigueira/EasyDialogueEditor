@@ -95,6 +95,7 @@ int main(int, char**) {
         storyteller::NodeEditorShow();
         if (!hasRootSpawned) {
             hasRootSpawned = true;
+            ImNodes::GetIO().AltMouseButton = ImGuiMouseButton_::ImGuiMouseButton_Right;
             storyteller::InitializeConversation();
         }
 
