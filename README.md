@@ -33,7 +33,7 @@ cd vcpkg
 vcpkg install sdl2 nlohmann-json
 ```
 Alternatively, instead of running `vcpkg install sdl2 nlohmann-json`, if you are using Visual Studio 2022:
-- Right click the EasyDialogEditor solution → Properties → vcpkg → Set `Use Vcpkg Manifest` to **Yes**
+- Right click the **EasyDialogEditor** solution → Properties → vcpkg → Set `Use Vcpkg Manifest` to **Yes**
 
 ## FAQ (Frequently Asked Questions)
 
