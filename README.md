@@ -2,12 +2,13 @@
 
 **EasyDialogEditor** is a lightweight dialog tree editor for games. 
 
-It allows you to visually create dialog trees and export them as JSON.
-It is not a dialog system, but rather a way of visually creating dialog data. As such, it will work on any dialog system as long as you parse the data on your end.
+It allows you to visually create dialog trees and export them as JSON files.
+It is not a dialog system, but rather a way of visually creating dialog assets. As such, it will work on any dialog system and game engine as long as you parse the data on your end.
+It supports **Speech phrase nodes** and **Player response nodes**
 
 The program is a single portable executable (~2.7MB) with no external dependencies.
 
-Built with `ImGui`, `ImNodes`, and `SDL2`.
+Built with [ImGui](https://github.com/ocornut/imgui), [ImNodes](https://github.com/Nelarius/imnodes), and [SDL2](https://github.com/libsdl-org/SDL).
 
 It currently only works on **Windows**.
 
@@ -17,7 +18,7 @@ It currently only works on **Windows**.
 
 ### Prerequisites
 - C++ Compiler (GCC, Clang, or MSVC)
-- CMake (Minimum version required, e.g., 3.20+)
+- CMake
 
 ### Building
 Inside the cloned project run the following command:
@@ -37,8 +38,8 @@ Alternatively, instead of running `vcpkg install sdl2 nlohmann-json`, if you are
 
 ## FAQ (Frequently Asked Questions)
 
-#### Q: Why does windows suspect a virus when opening EasyDialogManager.exe from Releases?
-R: Windows will almost always give you that warning when running a downloaded executable. There is not much I can do, but you can always inspeact the code and build from source.
+#### Q: Why does windows suspect a virus when opening *EasyDialogManager.exe* from Releases?
+R: Windows will almost always give you that warning when running a downloaded executable. There is not much I can do, but you can always inspect the code and build from source.
 
 #### Q: Does it work on Linux/MacOs ?
 R: It currently only runs natively on Windows, but you may be able to run it on Linux using *Wine* (I didn't test it though).
