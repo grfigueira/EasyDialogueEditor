@@ -1,10 +1,10 @@
 # EasyDialogEditor
 
-**EasyDialogEditor** is a lightweight dialog tree editor for games. 
+**EasyDialogEditor** is a lightweight dialogue tree editor for games. 
 
 It allows you to visually create dialog trees and export them as JSON files.
-It is not a dialog system, but rather a way of visually creating dialog assets. As such, it will work on any dialog system and game engine as long as you parse the data on your end.
-It supports **Speech phrase nodes** and **Player response nodes**
+It is not a dialog system, but rather a way of visually creating and editing dialog assets. As such, it will work on any dialog system and game engine as long as you deserialize the JSON files on your end.
+It supports **Speech phrase nodes** and **Player response nodes**.
 
 The program is a single portable executable (~2.7MB) with no external dependencies.
 
@@ -43,3 +43,15 @@ R: Windows will almost always give you that warning when running a downloaded ex
 
 #### Q: Does it work on Linux/MacOs ?
 R: It currently only runs natively on Windows, but you may be able to run it on Linux using *Wine* (I didn't test it though).
+
+## TODO
+Planned upcoming features: 
+- [ ] Event callback tags;
+- [ ] Conditionals;
+- [ ] Character names in Speech nodes;
+- [ ] Simple dialogue player window;
+- [ ] Mac and Linux support;
+- [ ] Save/Load graph states;
+- [ ] Undo/Redo
+
+Feel free to fork and do whatever you want with the code. 
