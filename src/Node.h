@@ -80,6 +80,7 @@ struct ResponseNode : public Node
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Node, id, nodeType, text, nextNodeId, responses);
+// TODO create a wrapper that exports the current state of the program including links
 
 inline SpeechNode* Node::AsSpeech()
 {

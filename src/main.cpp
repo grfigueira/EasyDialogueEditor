@@ -102,6 +102,7 @@
      
      bool done = false;
      bool hasRootSpawned = false;
+
 	 static const char* DEFAULT_INI = R"INI(
 [Window][MainDockspace]
 Pos=0,0
@@ -144,6 +145,11 @@ DockSpace     ID=0x5F4274ED Window=0x1F1D7494 Pos=0,0 Size=1440,900 Split=X
      while (!done)
      {
          SDL_Event event;
+
+         /*************************************************************
+         *                   Process SDL events
+         *************************************************************/
+
          while (SDL_PollEvent(&event))
          {
              ImGui_ImplSDL2_ProcessEvent(&event);
@@ -156,7 +162,7 @@ DockSpace     ID=0x5F4274ED Window=0x1F1D7494 Pos=0,0 Size=1440,900 Split=X
 			 {
 				 if ((event.key.keysym.mod & KMOD_CTRL) && event.key.keysym.sym == SDLK_x)
 				 {
-                     ede::FileDialogs::ExportJsonFile();
+                     ede::FileDialogs::ExportDialogueJsonFile();
 				 }
 			 }
          }
@@ -172,6 +178,7 @@ DockSpace     ID=0x5F4274ED Window=0x1F1D7494 Pos=0,0 Size=1440,900 Split=X
              ImNodes::EditorContextSetZoom(zoom, ImGui::GetMousePos());
          }
  
+         // EasyDialogEditor "entry point"
          ede::NodeEditorShow();
          
          if (!hasRootSpawned) {
@@ -195,7 +202,7 @@ DockSpace     ID=0x5F4274ED Window=0x1F1D7494 Pos=0,0 Size=1440,900 Split=X
      // Cleanup
      ImGui_ImplOpenGL3_Shutdown();
      ImGui_ImplSDL2_Shutdown();
-     ede::NodeEditorShutdown(); // Make sure this function exists
+     ede::NodeEditorShutdown();
      ImNodes::DestroyContext();
      ImGui::DestroyContext();
  

@@ -15,7 +15,6 @@
 #include "show_windows.h"
 #include <unordered_map>
 #include <imgui_internal.h>
-#include "imgui_markdown.h"
 #include <format>
 #include <nlohmann/json.hpp>
 
@@ -267,8 +266,9 @@ namespace ede
 					node = new ResponseNode(++next_node_id, text, pos);
 					break;
 				}
-
-				ImNodes::SetNodeScreenSpacePos(node->id, node->position);
+				if (node) {
+					ImNodes::SetNodeScreenSpacePos(node->id, node->position);
+				}
 				nodes[node->id] = node;
 				return node;
 			}
@@ -478,6 +478,10 @@ namespace ede
 		return res;
 	}
 
+	std::vector<Node> GetNodesData() {
+		return editor.GetNodesData();
+	}
+
 	/*************************************
 	*               Others
 	**************************************/
@@ -488,10 +492,6 @@ namespace ede
 
 	void ToggleAboutWindow() {
 		editor.ToggleAboutWindow();
-	}
-
-	std::vector<Node> GetNodesData() {
-		return editor.GetNodesData();
 	}
 
 } // namespace storyteller

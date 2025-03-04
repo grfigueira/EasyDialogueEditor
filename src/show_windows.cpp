@@ -67,7 +67,7 @@ GitHub repository: [github.com/grfigueira/EasyDialogEditor](https://github.com/g
 			}
 			if (ImGui::BeginMenu("Export")) {
 				if (ImGui::MenuItem("JSON", "Ctrl+X")) {
-					ede::FileDialogs::ExportJsonFile();
+					ede::FileDialogs::ExportDialogueJsonFile();
 				}
 				ImGui::EndMenu();
 			}
