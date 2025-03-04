@@ -1,3 +1,9 @@
+/******************************************************************************
+ * Copyright (c) 2025 Guilherme Figueira
+ * MIT License - See LICENSE file in the project root for details
+ * Contact: g.figueira.2002@gmail.com
+ ******************************************************************************/
+
 #include "Utils.h"
 #include <windows.h>
 #include <shobjidl.h>
