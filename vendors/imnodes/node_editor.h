@@ -17,4 +17,5 @@ namespace ede
 	int GetNumNodesOfType(NodeType type);
 	void ToggleDemoWindow();
 	void ToggleAboutWindow();
+	std::vector<Node> GetNodesData();
 } // namespace storyteller

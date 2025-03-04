@@ -3,6 +3,7 @@
 /out/
 /CMakeFiles/
 /_deps/
+/vcpkg_installed/
 CMakeCache.txt
 *.cmake.stamp
 *.dir/

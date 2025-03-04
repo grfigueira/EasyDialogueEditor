@@ -1,4 +1,4 @@
-namespace otherwindows {
+namespace ede {
 	void ShowAboutWindow(bool* p_open);
 	void ShowMenuBar();
 	void ShowGraphInfoWindow();

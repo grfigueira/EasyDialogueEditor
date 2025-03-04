@@ -17,6 +17,7 @@
 #include <imgui_internal.h>
 #include "imgui_markdown.h"
 #include <format>
+#include <nlohmann/json.hpp>
 
 #define LOG(x) std::cout << x << std::endl;
 
@@ -41,7 +42,7 @@ namespace ede
 			int                                next_node_id = -1;
 			int                                next_link_id = -1;
 			static const char* NodeTypeStrings[];
-			bool bShowDemoWindow, bShowAboutSection;
+			bool bShowDemoWindow, bShowAboutSection, bShowCreateNodeTooltip;
 
 		public:
 
@@ -53,7 +54,11 @@ namespace ede
 				}
 
 				if (bShowAboutSection) {
-					otherwindows::ShowAboutWindow(&bShowAboutSection);
+					ede::ShowAboutWindow(&bShowAboutSection);
+				}
+
+				if (bShowCreateNodeTooltip) {
+					ImGui::SetTooltip("+ Add Node");
 				}
 
 				ImGuiIO& io = ImGui::GetIO();
@@ -87,7 +92,7 @@ namespace ede
 					ImGuiWindowFlags_::ImGuiWindowFlags_NoScrollbar |
 					ImGuiWindowFlags_::ImGuiWindowFlags_NoMove);
 
-				otherwindows::ShowMenuBar();
+				ede::ShowMenuBar();
 
 				HandleNodeRemoval();
 
@@ -127,14 +132,19 @@ namespace ede
 				if (ImNodes::IsLinkCreated(&start_attr, &end_attr))
 				{
 					HandleLinkManualCreation(start_attr, end_attr);
+					bShowCreateNodeTooltip = false;
 				}
 				else {
 					HandleLinkDropped();
 				}
 
+				if (ImNodes::IsLinkStarted(&start_attr)) {
+					bShowCreateNodeTooltip = true;
+				}
+
 				ImGui::End();
 
-				otherwindows::ShowGraphInfoWindow();
+				ede::ShowGraphInfoWindow();
 			}
 
 			// executed if user link two already existing nodes
@@ -168,6 +178,7 @@ namespace ede
 				int started_attr;
 				if (ImNodes::IsLinkDropped(&started_attr, /*including_detached_links=*/false))
 				{
+					bShowCreateNodeTooltip = false;
 					LOG("linked dropped");
 					Node* start_node = nodes[started_attr >> NodePartShift::EndPin];
 
@@ -226,6 +237,15 @@ namespace ede
 					}
 				}
 				return resIds;
+			}
+
+			std::vector<Node> GetNodesData() {
+				std::vector<Node> res;
+				for (const auto& pair : nodes) {
+					Node* node = pair.second;
+					res.push_back(*node);
+				}
+				return res;
 			}
 
 			/******************************************************************************
@@ -411,9 +431,10 @@ namespace ede
 
 		ImNodesStyle& style = ImNodes::GetStyle();
 
-		otherwindows::LoadFonts(16.f);
+		ede::LoadFonts(16.f);
 
 		style.PinCircleRadius = 8.0f;
+		style.PinQuadSideLength = 100.0f;
 
 		style.PinLineThickness = 2.0f;
 		style.PinHoverRadius = 10.0f;
@@ -467,6 +488,10 @@ namespace ede
 
 	void ToggleAboutWindow() {
 		editor.ToggleAboutWindow();
+	}
+
+	std::vector<Node> GetNodesData() {
+		return editor.GetNodesData();
 	}
 
 } // namespace storyteller
