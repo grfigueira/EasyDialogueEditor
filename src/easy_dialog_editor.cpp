@@ -15,22 +15,23 @@
 #include "show_windows.h"
 #include <unordered_map>
 #include <imgui_internal.h>
+#include "imgui_markdown.h"
 #include <format>
 
 #define LOG(x) std::cout << x << std::endl;
 
 /******************************************************************************
- *                   StoryTeller - Main file
+ *                   EasyDialogEditor - Main file
  ******************************************************************************/
 
-namespace storyteller
+namespace ede
 {
 	// Anonymous namespace
 	// makes the 'StoryTellerNodeEditor editor' instance global in this cpp file only
 	namespace
 	{
 
-		class StoryTellerNodeEditor
+		class EasyDialogEditor
 		{
 		private:
 
@@ -40,7 +41,7 @@ namespace storyteller
 			int                                next_node_id = -1;
 			int                                next_link_id = -1;
 			static const char* NodeTypeStrings[];
-			bool bShowDemoWindow = false;
+			bool bShowDemoWindow, bShowAboutSection;
 
 		public:
 
@@ -50,6 +51,11 @@ namespace storyteller
 				if (bShowDemoWindow) {
 					ImGui::ShowDemoWindow();
 				}
+
+				if (bShowAboutSection) {
+					otherwindows::ShowAboutWindow(&bShowAboutSection);
+				}
+
 				ImGuiIO& io = ImGui::GetIO();
 				ImGuiViewport* viewport = ImGui::GetMainViewport();
 
@@ -299,7 +305,7 @@ namespace storyteller
 			}
 
 			// Renders a node on the grid
-			void DrawNode(int node_id, const char* HeaderText, float scale = /*currently not being used*/ 1.0f)
+			void DrawNode(int node_id, const char* HeaderText)
 			{
 				Node* node = nodes[node_id];
 				if (node)
@@ -326,13 +332,7 @@ namespace storyteller
 					ImNodes::BeginStaticAttribute(node_id << 16);
 					ImGui::PushItemWidth(200.0f);
 					ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 4.0f));
-					if (nodes.find(node_id) != nodes.end() && nodes[node_id] != nullptr) {
-						ImGui::InputText("Text", &nodes[node_id]->text);
-					}
-					else {
-						// Handle the case where the node is not found or is not initialized
-						std::cerr << "Node with id " << node_id << " is not initialized." << std::endl;
-					}
+					ImGui::InputText("Text", &nodes[node_id]->text);
 					ImGui::PopStyleVar();
 					ImGui::PopItemWidth();
 					ImNodes::EndStaticAttribute();
@@ -356,10 +356,13 @@ namespace storyteller
 					ImGui::Dummy(ImVec2(0.0f, 4.0f));
 
 					// input pin
-					ImNodes::BeginInputAttribute(node_id << 8);
-					ImGui::TextUnformatted("input");
-					ImNodes::EndInputAttribute();
-
+					if(node_id != 0)
+					{
+						ImNodes::BeginInputAttribute(node_id << 8);
+						ImGui::TextUnformatted("input");
+						ImNodes::EndInputAttribute();
+					}
+					
 					// output pin
 					ImGui::SameLine(200);
 					ImNodes::BeginOutputAttribute(node_id << 24);
@@ -383,13 +386,17 @@ namespace storyteller
 				bShowDemoWindow = !bShowDemoWindow;
 			}
 
+			void ToggleAboutWindow() {
+				bShowAboutSection = !bShowAboutSection;
+			}
+
 			/******************************************************************************
 			 ******************************************************************************/
 		};
 
-		const char* StoryTellerNodeEditor::NodeTypeStrings[] = { "Speech", "Response" };
+		const char* EasyDialogEditor::NodeTypeStrings[] = { "Speech", "Response" };
 
-		static StoryTellerNodeEditor editor;
+		static EasyDialogEditor editor;
 	} // namespace
 
 	void InitializeConversation()
@@ -403,6 +410,8 @@ namespace storyteller
 		ImNodes::SetNodeGridSpacePos(1, ImVec2(200.0f, 200.0f));
 
 		ImNodesStyle& style = ImNodes::GetStyle();
+
+		otherwindows::LoadFonts(16.f);
 
 		style.PinCircleRadius = 8.0f;
 
@@ -454,6 +463,10 @@ namespace storyteller
 
 	void ToggleDemoWindow() {
 		editor.ToggleDemoWindow();
+	}
+
+	void ToggleAboutWindow() {
+		editor.ToggleAboutWindow();
 	}
 
 } // namespace storyteller

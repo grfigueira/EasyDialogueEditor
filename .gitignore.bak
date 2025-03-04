@@ -1,0 +1,33 @@
+# Ignore build artifacts
+/build/
+/out/
+/CMakeFiles/
+/_deps/
+CMakeCache.txt
+*.cmake.stamp
+*.dir/
+*.obj
+*.pdb
+*.lib
+*.dll
+*.exp
+*.exe
+*.pdb
+
+# Ignore Visual Studio/VSCode settings
+.vs/
+.vscode/
+*.VC.db
+*.VC.VC.opendb
+*.vcxproj*
+*.user
+*.suo
+*.filters
+
+# Ignore OS-specific files
+*.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
