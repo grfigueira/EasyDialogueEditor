@@ -7,13 +7,15 @@
 #pragma once
 #include "Node.h"
 
-namespace storyteller
+namespace ede
 {
-void NodeEditorInitialize();
-void NodeEditorShow();
-void NodeEditorShutdown();
-void InitializeConversation();
-std::vector<Node*> GetNodesVec();
-int GetNumNodesOfType(NodeType type);
-void ToggleDemoWindow();
+	void NodeEditorInitialize();
+	void NodeEditorShow();
+	void NodeEditorShutdown();
+	void InitializeConversation();
+	std::vector<Node*> GetNodesVec();
+	int GetNumNodesOfType(NodeType type);
+	void ToggleDemoWindow();
+	void ToggleAboutWindow();
+	std::vector<Node> GetNodesData();
 } // namespace storyteller

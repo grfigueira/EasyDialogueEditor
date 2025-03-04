@@ -9,6 +9,7 @@
 #include <vector>
 #include "imnodes.h"
 #include <imgui.h>
+#include <nlohmann/json.hpp>
 
 /******************************************************************************
  *                   Every node-related data structure
@@ -39,6 +40,8 @@ struct Node
     ImVec2      position;
     int nextNodeId = -1;
     int prevNodeId = -1;
+    std::vector<int> responses;
+    bool             expectesResponse;
 
     SpeechNode* AsSpeech();
 
@@ -49,9 +52,6 @@ struct Node
 
 struct SpeechNode : public Node
 {
-    std::vector<int> responses;
-    bool             expectesResponse;
-
     SpeechNode(int nodeId, const std::string& speechText, ImVec2 pos)
     {
         id = nodeId;
@@ -78,6 +78,8 @@ struct ResponseNode : public Node
         prevNodeId = -1;
     }
 };
+
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Node, id, nodeType, text, nextNodeId, responses);
 
 inline SpeechNode* Node::AsSpeech()
 {

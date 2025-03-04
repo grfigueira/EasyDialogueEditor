@@ -1,0 +1,28 @@
+#pragma once
+
+#include <string>
+#include <nlohmann/json_fwd.hpp>
+#include <node_editor.h>
+
+using json = nlohmann::json;
+
+namespace ede {
+	class FileDialogs 
+	{
+	public:
+		//static std::string OpenFile(const char* filter);
+		static void SaveFile(const json& j);
+
+		inline void ExportJsonFile()
+		{
+			std::vector<Node> nodes = ede::GetNodesData();
+			json j;
+			for (const Node& node : nodes) {
+				j.push_back(node);
+			}
+			std::cout << j << std::endl;
+			FileDialogs::SaveFile(j);
+		}
+
+	};
+}

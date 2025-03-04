@@ -1,11 +1,13 @@
 include(FetchContent)
 
 FetchContent_Declare(
-    SDL3
+    SDL2
     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-    GIT_TAG        release-3.2.0
+    GIT_TAG        release-2.28.5  # Choose an appropriate SDL2 version
 )
 
-FetchContent_MakeAvailable(SDL3)
+# Configure SDL2 build options
 set(SDL_SHARED OFF CACHE BOOL "" FORCE)
-set(SDL_STATIC ON CACHE BOOL "" FORCE)   # build SDL as a static library
+set(SDL_STATIC ON CACHE BOOL "" FORCE)
+
+FetchContent_MakeAvailable(SDL2)

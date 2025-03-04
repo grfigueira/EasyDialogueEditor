@@ -15,32 +15,34 @@
 #include "show_windows.h"
 #include <unordered_map>
 #include <imgui_internal.h>
+#include "imgui_markdown.h"
 #include <format>
+#include <nlohmann/json.hpp>
 
 #define LOG(x) std::cout << x << std::endl;
 
 /******************************************************************************
- *                   StoryTeller - Main file
+ *                   EasyDialogEditor - Main file
  ******************************************************************************/
 
-namespace storyteller
+namespace ede
 {
 	// Anonymous namespace
 	// makes the 'StoryTellerNodeEditor editor' instance global in this cpp file only
 	namespace
 	{
 
-		class StoryTellerNodeEditor
+		class EasyDialogEditor
 		{
 		private:
 
 			// Current state data
-			std::unordered_map<int, Node*>                 nodes;
+			std::unordered_map<int, Node*>                 nodes; // maybe these should be smart pointers?
 			std::unordered_map<int, Link*>                 links;
 			int                                next_node_id = -1;
 			int                                next_link_id = -1;
 			static const char* NodeTypeStrings[];
-			bool bShowDemoWindow = false;
+			bool bShowDemoWindow, bShowAboutSection, bShowCreateNodeTooltip;
 
 		public:
 
@@ -50,6 +52,15 @@ namespace storyteller
 				if (bShowDemoWindow) {
 					ImGui::ShowDemoWindow();
 				}
+
+				if (bShowAboutSection) {
+					ede::ShowAboutWindow(&bShowAboutSection);
+				}
+
+				if (bShowCreateNodeTooltip) {
+					ImGui::SetTooltip("+ Add Node");
+				}
+
 				ImGuiIO& io = ImGui::GetIO();
 				ImGuiViewport* viewport = ImGui::GetMainViewport();
 
@@ -81,7 +92,7 @@ namespace storyteller
 					ImGuiWindowFlags_::ImGuiWindowFlags_NoScrollbar |
 					ImGuiWindowFlags_::ImGuiWindowFlags_NoMove);
 
-				otherwindows::ShowMenuBar();
+				ede::ShowMenuBar();
 
 				HandleNodeRemoval();
 
@@ -113,28 +124,30 @@ namespace storyteller
 
 				ImNodes::EndNodeEditor();
 
-				/******************************************************************************
-				 *                   Create node when link is dropped
-				 ******************************************************************************/
-
-
-				 // Handle link creation between two already existing nodes
-				 // TODO: not working right now
+				/***************************************************
+				 *                   Handle links
+				 **************************************************/
 
 				int start_attr, end_attr;
 				if (ImNodes::IsLinkCreated(&start_attr, &end_attr))
 				{
 					HandleLinkManualCreation(start_attr, end_attr);
+					bShowCreateNodeTooltip = false;
 				}
 				else {
 					HandleLinkDropped();
 				}
 
+				if (ImNodes::IsLinkStarted(&start_attr)) {
+					bShowCreateNodeTooltip = true;
+				}
+
 				ImGui::End();
 
-				otherwindows::ShowGraphInfoWindow();
+				ede::ShowGraphInfoWindow();
 			}
 
+			// executed if user link two already existing nodes
 			void HandleLinkManualCreation(int start_attr, int end_attr)
 			{
 				int start_node_id = start_attr >> NodePartShift::EndPin;
@@ -159,11 +172,13 @@ namespace storyteller
 
 			}
 
+			// create new node when dropping a link on empty space
 			void HandleLinkDropped()
 			{
 				int started_attr;
 				if (ImNodes::IsLinkDropped(&started_attr, /*including_detached_links=*/false))
 				{
+					bShowCreateNodeTooltip = false;
 					LOG("linked dropped");
 					Node* start_node = nodes[started_attr >> NodePartShift::EndPin];
 
@@ -193,7 +208,8 @@ namespace storyteller
 					}
 				}
 			}
-
+			
+			[[deprecated("Creating nodes now works by dropping links")]]
 			void ShowNodeCreationPopup()
 			{
 				if (ImGui::BeginPopup("Add node"))
@@ -223,11 +239,20 @@ namespace storyteller
 				return resIds;
 			}
 
+			std::vector<Node> GetNodesData() {
+				std::vector<Node> res;
+				for (const auto& pair : nodes) {
+					Node* node = pair.second;
+					res.push_back(*node);
+				}
+				return res;
+			}
+
 			/******************************************************************************
 			 *                   Node creation/removal logic
 			 ******************************************************************************/
 
-			 // addition of node to data structure
+			 // addition of node to state data
 			Node* AddNode(const char* text, ImVec2 pos, NodeType type)
 			{
 				pos.y -= 110.f;
@@ -247,7 +272,7 @@ namespace storyteller
 				nodes[node->id] = node;
 				return node;
 			}
-
+			
 			void HandleNodeRemoval() {
 				const int num_nodes_selected = ImNodes::NumSelectedNodes();
 				if (num_nodes_selected > 0 && (ImGui::IsKeyReleased(ImGuiKey_Delete)))
@@ -269,7 +294,6 @@ namespace storyteller
 								links.erase(link_id);
 							}
 
-							// TODO i should change all these pointers to shared pointers
 							if (Node* node = nodes[node_id]) {
 
 								if (Node* prev_node = nodes[node->prevNodeId]) {
@@ -290,8 +314,6 @@ namespace storyteller
 									}
 								}
 
-
-
 							}
 
 							nodes.erase(node_id);
@@ -302,8 +324,8 @@ namespace storyteller
 				}
 			}
 
-			// Visual creation and insertion in grid
-			void DrawNode(int node_id, const char* HeaderText, float scale = 1.0f)
+			// Renders a node on the grid
+			void DrawNode(int node_id, const char* HeaderText)
 			{
 				Node* node = nodes[node_id];
 				if (node)
@@ -324,19 +346,13 @@ namespace storyteller
 					ImNodes::EndNodeTitleBar();
 
 					// spacing
-					//ImGui::Dummy(ImVec2(0.0f, 4.0f));
+					ImGui::Dummy(ImVec2(0.0f, 4.0f));
 
 					// text input
 					ImNodes::BeginStaticAttribute(node_id << 16);
 					ImGui::PushItemWidth(200.0f);
 					ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 4.0f));
-					if (nodes.find(node_id) != nodes.end() && nodes[node_id] != nullptr) {
-						ImGui::InputText("Text", &nodes[node_id]->text);
-					}
-					else {
-						// Handle the case where the node is not found or is not initialized
-						std::cerr << "Node with id " << node_id << " is not initialized." << std::endl;
-					}
+					ImGui::InputText("Text", &nodes[node_id]->text);
 					ImGui::PopStyleVar();
 					ImGui::PopItemWidth();
 					ImNodes::EndStaticAttribute();
@@ -360,10 +376,13 @@ namespace storyteller
 					ImGui::Dummy(ImVec2(0.0f, 4.0f));
 
 					// input pin
-					ImNodes::BeginInputAttribute(node_id << 8);
-					ImGui::TextUnformatted("input");
-					ImNodes::EndInputAttribute();
-
+					if(node_id != 0)
+					{
+						ImNodes::BeginInputAttribute(node_id << 8);
+						ImGui::TextUnformatted("input");
+						ImNodes::EndInputAttribute();
+					}
+					
 					// output pin
 					ImGui::SameLine(200);
 					ImNodes::BeginOutputAttribute(node_id << 24);
@@ -387,13 +406,17 @@ namespace storyteller
 				bShowDemoWindow = !bShowDemoWindow;
 			}
 
+			void ToggleAboutWindow() {
+				bShowAboutSection = !bShowAboutSection;
+			}
+
 			/******************************************************************************
 			 ******************************************************************************/
 		};
 
-		const char* StoryTellerNodeEditor::NodeTypeStrings[] = { "Speech", "Response" };
+		const char* EasyDialogEditor::NodeTypeStrings[] = { "Speech", "Response" };
 
-		static StoryTellerNodeEditor editor;
+		static EasyDialogEditor editor;
 	} // namespace
 
 	void InitializeConversation()
@@ -408,7 +431,10 @@ namespace storyteller
 
 		ImNodesStyle& style = ImNodes::GetStyle();
 
+		ede::LoadFonts(16.f);
+
 		style.PinCircleRadius = 8.0f;
+		style.PinQuadSideLength = 100.0f;
 
 		style.PinLineThickness = 2.0f;
 		style.PinHoverRadius = 10.0f;
@@ -458,6 +484,14 @@ namespace storyteller
 
 	void ToggleDemoWindow() {
 		editor.ToggleDemoWindow();
+	}
+
+	void ToggleAboutWindow() {
+		editor.ToggleAboutWindow();
+	}
+
+	std::vector<Node> GetNodesData() {
+		return editor.GetNodesData();
 	}
 
 } // namespace storyteller
