@@ -26,7 +26,7 @@ Inside the cloned project run the following command:
 git submodule update --init --recursive
 ```
 
-Some dependancies are managed by [vcpkg](https://github.com/microsoft/vcpkg), therefore we need to bootstrap **vcpkg** and install the dependancies:
+Some dependancies are managed by [vcpkg](https://github.com/microsoft/vcpkg), therefore we need to bootstrap it and install the dependancies:
 ```
 cd vcpkg
 .\bootstrap-vcpkg.bat
