@@ -30,16 +30,19 @@ namespace ede
 	// makes the 'StoryTellerNodeEditor editor' instance global in this cpp file only
 	namespace
 	{
+		struct State {
+			std::unordered_map<int, Node*>                 nodes; // maybe these should be smart pointers?
+			std::unordered_map<int, Link*>                 links;
+			int                                next_node_id = -1;
+			int                                next_link_id = -1;
+		};
 
 		class EasyDialogEditor
 		{
 		private:
 
 			// Current state data
-			std::unordered_map<int, Node*>                 nodes; // maybe these should be smart pointers?
-			std::unordered_map<int, Link*>                 links;
-			int                                next_node_id = -1;
-			int                                next_link_id = -1;
+			State current_state;
 			static const char* NodeTypeStrings[];
 			bool bShowDemoWindow, bShowAboutSection, bShowCreateNodeTooltip;
 
@@ -101,7 +104,7 @@ namespace ede
 				 *             Draw every node and link from current state
 				 ******************************************************************************/
 				{
-					for (const auto& pair : nodes)
+					for (const auto& pair : current_state.nodes)
 					{
 						Node* node = pair.second;
 						if (node) {
@@ -110,7 +113,7 @@ namespace ede
 						}
 					}
 
-					for (const auto& pair : links)
+					for (const auto& pair : current_state.links)
 					{
 						Link* link = pair.second;
 						if (link) {
@@ -152,8 +155,8 @@ namespace ede
 				int start_node_id = start_attr >> NodePartShift::EndPin;
 				int end_node_id = end_attr >> NodePartShift::InputPin;
 
-				if (SpeechNode* start_speech_node = nodes[start_node_id]->AsSpeech()) {
-					if (ResponseNode* end_response_node = nodes[end_node_id]->AsResponse()) {
+				if (SpeechNode* start_speech_node = current_state.nodes[start_node_id]->AsSpeech()) {
+					if (ResponseNode* end_response_node = current_state.nodes[end_node_id]->AsResponse()) {
 						if (!start_speech_node->expectesResponse) {
 							return;
 						}
@@ -166,8 +169,8 @@ namespace ede
 						start_speech_node->nextNodeId = end_node_id;
 					}
 				}
-				Link* link = new Link{ ++next_link_id, start_attr, end_attr };
-				links[link->id] = link;
+				Link* link = new Link{ ++current_state.next_link_id, start_attr, end_attr };
+				current_state.links[link->id] = link;
 
 			}
 
@@ -179,7 +182,7 @@ namespace ede
 				{
 					bShowCreateNodeTooltip = false;
 					LOG("linked dropped");
-					Node* start_node = nodes[started_attr >> NodePartShift::EndPin];
+					Node* start_node = current_state.nodes[started_attr >> NodePartShift::EndPin];
 
 					if (SpeechNode* speech_start_node = start_node->AsSpeech())
 					{
@@ -189,9 +192,9 @@ namespace ede
 							newNode->prevNodeId = started_attr >> NodePartShift::EndPin;
 
 							Link* link = new Link{
-								++next_link_id, started_attr, next_node_id << NodePartShift::InputPin };
-							links[next_link_id] = link;
-							speech_start_node->responses.push_back(next_node_id);
+								++current_state.next_link_id, started_attr, current_state.next_node_id << NodePartShift::InputPin };
+							current_state.links[current_state.next_link_id] = link;
+							speech_start_node->responses.push_back(current_state.next_node_id);
 							return;
 						}
 					}
@@ -201,9 +204,9 @@ namespace ede
 						newNode->prevNodeId = started_attr >> NodePartShift::EndPin;
 
 						Link* link = new Link{
-							++next_link_id, started_attr, next_node_id << NodePartShift::InputPin };
-						links[next_link_id] = link;
-						start_node->nextNodeId = next_node_id;
+							++current_state.next_link_id, started_attr, current_state.next_node_id << NodePartShift::InputPin };
+						current_state.links[current_state.next_link_id] = link;
+						start_node->nextNodeId = current_state.next_node_id;
 					}
 				}
 			}
@@ -229,7 +232,7 @@ namespace ede
 
 			std::vector<int> GetConnectedLinks(int node_id) {
 				std::vector<int> resIds;
-				for (const auto& pair : links) {
+				for (const auto& pair : current_state.links) {
 					Link* link = pair.second;
 					if (link->EndsWithNode(node_id) || link->StartsWithNode(node_id)) {
 						resIds.push_back(link->id);
@@ -240,7 +243,7 @@ namespace ede
 
 			std::vector<Node> GetNodesData() {
 				std::vector<Node> res;
-				for (const auto& pair : nodes) {
+				for (const auto& pair : current_state.nodes) {
 					Node* node = pair.second;
 					res.push_back(*node);
 				}
@@ -260,16 +263,16 @@ namespace ede
 				switch (type)
 				{
 				case NodeType::Speech:
-					node = new SpeechNode(++next_node_id, text, pos);
+					node = new SpeechNode(++current_state.next_node_id, text, pos);
 					break;
 				case NodeType::Response:
-					node = new ResponseNode(++next_node_id, text, pos);
+					node = new ResponseNode(++current_state.next_node_id, text, pos);
 					break;
 				}
 				if (node) {
 					ImNodes::SetNodeScreenSpacePos(node->id, node->position);
 				}
-				nodes[node->id] = node;
+				current_state.nodes[node->id] = node;
 				return node;
 			}
 			
@@ -291,12 +294,12 @@ namespace ede
 
 							// delete every related link
 							for (int link_id : GetConnectedLinks(node_id)) {
-								links.erase(link_id);
+								current_state.links.erase(link_id);
 							}
 
-							if (Node* node = nodes[node_id]) {
+							if (Node* node = current_state.nodes[node_id]) {
 
-								if (Node* prev_node = nodes[node->prevNodeId]) {
+								if (Node* prev_node = current_state.nodes[node->prevNodeId]) {
 									prev_node->nextNodeId = -1;
 
 									if (node->nodeType == NodeType::Response) {
@@ -308,7 +311,7 @@ namespace ede
 								}
 
 								if (node->nextNodeId != -1) {
-									if (Node* next_node = nodes[node->nextNodeId]) {
+									if (Node* next_node = current_state.nodes[node->nextNodeId]) {
 										next_node->prevNodeId = -1;
 										std::cout << "next_node info: " << next_node->id << "\n";
 									}
@@ -316,7 +319,7 @@ namespace ede
 
 							}
 
-							nodes.erase(node_id);
+							current_state.nodes.erase(node_id);
 
 						}
 						delete[] selected_nodes;
@@ -327,7 +330,7 @@ namespace ede
 			// Renders a node on the grid
 			void DrawNode(int node_id, const char* HeaderText)
 			{
-				Node* node = nodes[node_id];
+				Node* node = current_state.nodes[node_id];
 				if (node)
 				{
 
@@ -352,23 +355,23 @@ namespace ede
 					ImNodes::BeginStaticAttribute(node_id << 16);
 					ImGui::PushItemWidth(200.0f);
 					ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 4.0f));
-					ImGui::InputText("Text", &nodes[node_id]->text);
+					ImGui::InputText("Text", &current_state.nodes[node_id]->text);
 					ImGui::PopStyleVar();
 					ImGui::PopItemWidth();
 					ImNodes::EndStaticAttribute();
 
 					// checkbox
-					if (nodes[node_id]->nodeType == NodeType::Speech)
+					if (current_state.nodes[node_id]->nodeType == NodeType::Speech)
 					{
-						SpeechNode* speech_node = nodes[node_id]->AsSpeech();
+						SpeechNode* speech_node = current_state.nodes[node_id]->AsSpeech();
 						if (speech_node->nextNodeId == -1 && speech_node->responses.empty())
 						{
-							ImGui::Checkbox("Expects response", &nodes[node_id]->AsSpeech()->expectesResponse);
+							ImGui::Checkbox("Expects response", &current_state.nodes[node_id]->AsSpeech()->expectesResponse);
 						}
 						else
 						{
 							ImGui::BeginDisabled();
-							ImGui::Checkbox("Expects response", &nodes[node_id]->AsSpeech()->expectesResponse);
+							ImGui::Checkbox("Expects response", &current_state.nodes[node_id]->AsSpeech()->expectesResponse);
 							ImGui::EndDisabled();
 						}
 					}
@@ -399,7 +402,7 @@ namespace ede
 			}
 
 			const std::unordered_map<int, Node*>& GetNodesMap() const {
-				return nodes;
+				return current_state.nodes;
 			}
 
 			void ToggleDemoWindow() {
@@ -431,7 +434,7 @@ namespace ede
 
 		ImNodesStyle& style = ImNodes::GetStyle();
 
-		ede::LoadFonts(16.f);
+		//ede::LoadFonts(16.f);
 
 		style.PinCircleRadius = 8.0f;
 		style.PinQuadSideLength = 100.0f;
@@ -489,7 +492,7 @@ namespace ede
 	void ToggleDemoWindow() {
 		editor.ToggleDemoWindow();
 	}
-
+	
 	void ToggleAboutWindow() {
 		editor.ToggleAboutWindow();
 	}

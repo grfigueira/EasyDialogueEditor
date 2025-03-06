@@ -1,16 +1,19 @@
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-add_executable(EasyDialogEditor 
+add_executable(EasyDialogueEditor 
     main.cpp
     Node.h
+	Utils.h
+	Roboto-Medium.c
     easy_dialog_editor.cpp
     show_windows.h
     show_windows.cpp
     WindowsPlatformUtils.cpp
     resources/resource.rc
+	RobotoFont.hpp
 )
 
-target_link_libraries(EasyDialogEditor
+target_link_libraries(EasyDialogueEditor
     PRIVATE
 	SDL2::SDL2main
     SDL2::SDL2
@@ -19,7 +22,7 @@ target_link_libraries(EasyDialogEditor
     imnodes
 )
 
-target_compile_definitions(EasyDialogEditor PRIVATE SDL_STATIC)
+target_compile_definitions(EasyDialogueEditor PRIVATE SDL_STATIC)
 
 # Update the post-build command to copy SDL2 DLL instead
 #add_custom_command(TARGET EasyDialogEditor POST_BUILD

@@ -22,6 +22,7 @@
  #include <thread>
 
 #include "Utils.h"
+#include "RobotoFont.hpp"
 
 
  
@@ -87,6 +88,10 @@
      io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
      io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
      io.IniFilename = nullptr;
+
+     ImFontConfig font_cfg;
+     font_cfg.FontDataOwnedByAtlas = false;
+     io.Fonts->AddFontFromMemoryTTF((void*)_acRoboto_Medium, sizeof(_acRoboto_Medium), 16.0f, &font_cfg);
  
      ImNodes::CreateContext();
      ede::NodeEditorInitialize();

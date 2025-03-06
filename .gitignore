@@ -15,6 +15,7 @@ CMakeCache.txt
 *.exp
 *.exe
 *.pdb
+*.bak
 
 # Ignore Visual Studio/VSCode settings
 .vs/

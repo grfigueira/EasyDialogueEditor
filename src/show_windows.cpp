@@ -18,29 +18,31 @@
 
 using json = nlohmann::json;
 
+#define TEXT_BULLET(bullet, text) ImGui::TextWrapped(bullet); ImGui::SameLine(); ImGui::TextWrapped(text);
+
 namespace ede {
 
-	void Markdown(const std::string& markdown_); // forward declared
-
-	void MarkdownAboutSection()
-	{
-		const char* markdownText = (const char*)u8R"(
-**EasyDialogEditor** is a lightweight dialog tree editor for games, designed to help you visually create dialog flows and export them as JSON. While it's _not_ a dialog system itself, it perfectly complements any existing system if you parse the generated data on your end. The result is a portable solution for building branching dialogues.
-
-**Features**
-- Lightweight and portable, no installation required.
-- Visual creation of dialog trees
-- Straightforward JSON export for easy integration
-- Free and open-source
-# Credits
-Created by [Guilherme Figueira](https://grfigueira.github.io/MyPortfolio/)
-GitHub repository: [github.com/grfigueira/EasyDialogEditor](https://github.com/grfigueira/EasyDialogEditor)
-## Built With
-- [Dear ImGui](https://github.com/ocornut/imgui)
-- [ImNodes](https://github.com/Nelarius/imnodes)
-- [SDL2](https://www.libsdl.org/))";
-		Markdown(markdownText);
-	}
+//	void Markdown(const std::string& markdown_); // forward declared
+//
+//	void MarkdownAboutSection()
+//	{
+//		const char* markdownText = (const char*)u8R"(
+//**EasyDialogEditor** is a lightweight dialog tree editor for games, designed to help you visually create dialog flows and export them as JSON. While it's _not_ a dialog system itself, it perfectly complements any existing system if you parse the generated data on your end. The result is a portable solution for building branching dialogues.
+//
+//**Features**
+//- Lightweight and portable, no installation required.
+//- Visual creation of dialog trees
+//- Straightforward JSON export for easy integration
+//- Free and open-source
+//# Credits
+//Created by [Guilherme Figueira](https://grfigueira.github.io/MyPortfolio/)
+//GitHub repository: [github.com/grfigueira/EasyDialogEditor](https://github.com/grfigueira/EasyDialogEditor)
+//## Built With
+//- [Dear ImGui](https://github.com/ocornut/imgui)
+//- [ImNodes](https://github.com/Nelarius/imnodes)
+//- [SDL2](https://www.libsdl.org/))";
+//		Markdown(markdownText);
+//	}
 
 	void ShowAboutWindow(bool* p_open) {
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10.0f, 10.0f));
@@ -49,7 +51,21 @@ GitHub repository: [github.com/grfigueira/EasyDialogEditor](https://github.com/g
 			return;
 		}
 		ImGui::SetWindowSize(ImVec2(550, 400), ImGuiCond_::ImGuiCond_Once);
-		MarkdownAboutSection();
+		ImGui::SeparatorText("About EasyDialogueEditor");
+		ImGui::Indent();
+		TEXT_BULLET("-", "EasyDialogueEditor is a FOSS and lightweight dialogue tree editor for games.");
+		TEXT_BULLET("-", "It allows you to visually create dialog trees and export them as JSON files. It is not a dialog system, but rather a way of visually creating and editing dialog assets. As such, it will work on any dialog system and game engine as long as you deserialize the JSON files on your end.");
+		ImGui::Unindent();
+		ImGui::SeparatorText("Made possible by open-source");
+		ImGui::TextWrapped("This project was created with the help of the following open-source projects");
+		ImGui::Indent();
+		TEXT_BULLET("-", "ImGui");
+		TEXT_BULLET("-", "ImNodes");
+		TEXT_BULLET("-", "SDL2");
+		ImGui::Unindent();
+		ImGui::Separator();
+		ImGui::TextWrapped("Created by Guilherme Figueira");
+		//MarkdownAboutSection();
 		ImGui::End();
 		ImGui::PopStyleVar();
 	}
@@ -106,7 +122,7 @@ GitHub repository: [github.com/grfigueira/EasyDialogEditor](https://github.com/g
 
 	void ShowGraphInfoWindow()
 	{
-		float raw_text_block_height = 50.0f;
+		float raw_text_block_height = 60.0f;
 		ImGui::Begin("Story Graph Info");
 		auto nodes = ede::GetNodesVec();
 
@@ -118,9 +134,10 @@ GitHub repository: [github.com/grfigueira/EasyDialogEditor](https://github.com/g
 
 		int current_window_height = ImGui::GetContentRegionAvail().y - raw_text_block_height;
 
-		ImGui::BeginChild("Node List", ImVec2(0, current_window_height), true, ImGuiWindowFlags_::ImGuiWindowFlags_HorizontalScrollbar |
+		ImGui::BeginChild("Node List", ImVec2(0, current_window_height-300), true, ImGuiWindowFlags_::ImGuiWindowFlags_HorizontalScrollbar |
 			ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysVerticalScrollbar);
-
+		ImGui::SeparatorText("Current state");
+		ImGui::Dummy(ImVec2(0.0f, 5.0f));
 		std::string raw_info;
 
 		for (Node* node : nodes) {
@@ -163,6 +180,12 @@ GitHub repository: [github.com/grfigueira/EasyDialogEditor](https://github.com/g
 			ImGuiInputTextFlags_ReadOnly);
 		ImGui::EndChild();
 
+		ImGui::Dummy(ImVec2(0.0f, 5.0f));
+
+		ImGui::BeginChild("CallbackEvents", ImVec2(0, 300), true);
+		ImGui::SeparatorText("Callback events");
+		ImGui::EndChild();
+
 		ImGui::End();
 	}
 
@@ -187,91 +210,6 @@ GitHub repository: [github.com/grfigueira/EasyDialogEditor](https://github.com/g
 		{
 			ShellExecuteA(NULL, "open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
 		}
-	}
-
-	inline ImGui::MarkdownImageData ImageCallback(ImGui::MarkdownLinkCallbackData data_)
-	{
-		// In your application you would load an image based on data_ input. Here we just use the imgui font texture.
-		ImTextureID image = ImGui::GetIO().Fonts->TexID;
-		// > C++14 can use ImGui::MarkdownImageData imageData{ true, false, image, ImVec2( 40.0f, 20.0f ) };
-		ImGui::MarkdownImageData imageData;
-		imageData.isValid = true;
-		imageData.useLinkCallback = false;
-		imageData.user_texture_id = image;
-		imageData.size = ImVec2(40.0f, 20.0f);
-
-		// For image resize when available size.x > image width, add
-		ImVec2 const contentSize = ImGui::GetContentRegionAvail();
-		if (imageData.size.x > contentSize.x)
-		{
-			float const ratio = imageData.size.y / imageData.size.x;
-			imageData.size.x = contentSize.x;
-			imageData.size.y = contentSize.x * ratio;
-		}
-
-		return imageData;
-	}
-
-	void LoadFonts(float fontSize_)
-	{
-		ImGuiIO& io = ImGui::GetIO();
-		io.Fonts->Clear();
-		// Base font
-		io.Fonts->AddFontFromFileTTF("C:\\Users\\gfigu\\AppData\\Local\\Microsoft\\Windows\\Fonts\\Roboto-Medium.ttf", fontSize_);
-		// Bold headings H2 and H3
-		H2 = io.Fonts->AddFontFromFileTTF("C:\\Users\\gfigu\\AppData\\Local\\Microsoft\\Windows\\Fonts\\Roboto-Bold.ttf", fontSize_);
-		H3 = mdConfig.headingFormats[1].font;
-		// bold heading H1
-		float fontSizeH1 = fontSize_ * 1.4f;
-		H1 = io.Fonts->AddFontFromFileTTF("C:\\Users\\gfigu\\AppData\\Local\\Microsoft\\Windows\\Fonts\\Roboto-Bold.ttf", fontSizeH1);
-	}
-
-	void ExampleMarkdownFormatCallback(const ImGui::MarkdownFormatInfo& markdownFormatInfo_, bool start_)
-	{
-		// Call the default first so any settings can be overwritten by our implementation.
-		// Alternatively could be called or not called in a switch statement on a case by case basis.
-		// See defaultMarkdownFormatCallback definition for furhter examples of how to use it.
-		ImGui::defaultMarkdownFormatCallback(markdownFormatInfo_, start_);
-
-		switch (markdownFormatInfo_.type)
-		{
-			// example: change the colour of heading level 2
-		case ImGui::MarkdownFormatType::HEADING:
-		{
-			if (markdownFormatInfo_.level == 2)
-			{
-				if (start_)
-				{
-					ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyle().Colors[ImGuiCol_TextDisabled]);
-				}
-				else
-				{
-					ImGui::PopStyleColor();
-				}
-			}
-			break;
-		}
-		default:
-		{
-			break;
-		}
-		}
-	}
-
-	void Markdown(const std::string& markdown_)
-	{
-		// You can make your own Markdown function with your prefered string container and markdown config.
-		// > C++14 can use ImGui::MarkdownConfig mdConfig{ LinkCallback, NULL, ImageCallback, ICON_FA_LINK, { { H1, true }, { H2, true }, { H3, false } }, NULL };
-		mdConfig.linkCallback = LinkCallback;
-		mdConfig.tooltipCallback = NULL;
-		mdConfig.imageCallback = ImageCallback;
-		mdConfig.linkIcon = "";
-		mdConfig.headingFormats[0] = { H1, true };
-		mdConfig.headingFormats[1] = { H2, true };
-		mdConfig.headingFormats[2] = { H3, false };
-		mdConfig.userData = NULL;
-		mdConfig.formatCallback = ExampleMarkdownFormatCallback;
-		ImGui::Markdown(markdown_.c_str(), markdown_.length(), mdConfig);
 	}
 
 }
