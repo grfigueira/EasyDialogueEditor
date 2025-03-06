@@ -10,9 +10,10 @@ The program is a single portable executable (~2.7MB) with no external dependenci
 
 Built with [ImGui](https://github.com/ocornut/imgui), [ImNodes](https://github.com/Nelarius/imnodes), and [SDL2](https://github.com/libsdl-org/SDL).
 
-It currently only works on **Windows**.
+It currently only runs natively on **Windows**.
 
-<img src="https://github.com/user-attachments/assets/b8f0e885-0daa-4acf-a63a-2e986947150d" width="477" height="257"/>
+![EDE_gif_demo-ezgif com-resize](https://github.com/user-attachments/assets/e1d04469-09dc-4beb-929b-72f3259e2888)
+
 
 ## How to build
 
@@ -38,11 +39,11 @@ Alternatively, instead of running `vcpkg install sdl2 nlohmann-json`, if you are
 
 ## FAQ (Frequently Asked Questions)
 
-#### Q: Why does windows suspect a virus when opening *EasyDialogManager.exe* from Releases?
-R: Windows will almost always give you that warning when running a downloaded executable. There is not much I can do, but you can always inspect the code and build from source.
+#### Q: Why does Windows flag EasyDialogManager.exe from Releases as a potential virus?
+R: Windows often gives that warning about downloaded executables, especially from unknown developers. This is common and there is not much I can do. You can always review the source code and compile it yourself if you have concerns.
 
-#### Q: Does it work on Linux/MacOs ?
-R: It currently only runs natively on Windows, but you may be able to run it on Linux using *Wine* (I didn't test it though).
+#### Q: Is it compatible with Linux or macOS?
+R: The program currently only runs natively on Windows. It may work on Linux and macOS using Wine, but this hasn't been tested.
 
 ## TODO
 Planned upcoming features: 
@@ -52,6 +53,4 @@ Planned upcoming features:
 - [ ] Simple dialogue player window;
 - [ ] Mac and Linux support;
 - [ ] Save/Load graph states;
-- [ ] Undo/Redo
-
-Feel free to fork and do whatever you want with the code. 
+- [ ] Undo/Redo 
