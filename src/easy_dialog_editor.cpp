@@ -17,6 +17,7 @@
 #include <imgui_internal.h>
 #include <format>
 #include <nlohmann/json.hpp>
+#include <set>
 
 #define LOG(x) std::cout << x << std::endl;
 
@@ -35,6 +36,8 @@ namespace ede
 			std::unordered_map<int, Link*>                 links;
 			int                                next_node_id = -1;
 			int                                next_link_id = -1;
+			std::set<std::string> callbacks;
+			std::set<Conditional> conditionals;
 		};
 
 		class EasyDialogEditor
@@ -378,6 +381,31 @@ namespace ede
 
 					ImGui::Dummy(ImVec2(0.0f, 4.0f));
 
+					// callback selection
+					const char* combo_preview_value = "Select callback";
+
+					// Pass in the preview value visible before opening the combo (it could technically be different contents or not pulled from items[])
+					if (!node->selected_callbacks.empty()) {
+						const char* combo_preview_value = "Select callback";
+					}
+
+					if (ImGui::BeginCombo("Callback(s)", combo_preview_value, ImGuiComboFlags_::ImGuiComboFlags_WidthFitPreview))
+					{
+						for (auto& callback : current_state.callbacks)
+						{
+							const bool is_selected = node->selected_callbacks.contains(callback);
+							if (ImGui::Selectable(callback.c_str(), is_selected))
+								node->selected_callbacks.insert(callback);
+
+							// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+							if (is_selected)
+								ImGui::SetItemDefaultFocus();
+						}
+						ImGui::EndCombo();
+					}
+
+					ImGui::Dummy(ImVec2(0.0f, 4.0f));
+
 					// input pin
 					if(node_id != 0)
 					{
@@ -403,6 +431,10 @@ namespace ede
 
 			const std::unordered_map<int, Node*>& GetNodesMap() const {
 				return current_state.nodes;
+			}
+
+			std::set<std::string>& GetCallbacks() {
+				return current_state.callbacks;
 			}
 
 			void ToggleDemoWindow() {
@@ -433,8 +465,6 @@ namespace ede
 		ImNodes::SetNodeGridSpacePos(1, ImVec2(200.0f, 200.0f));
 
 		ImNodesStyle& style = ImNodes::GetStyle();
-
-		//ede::LoadFonts(16.f);
 
 		style.PinCircleRadius = 8.0f;
 		style.PinQuadSideLength = 100.0f;
@@ -483,6 +513,10 @@ namespace ede
 
 	std::vector<Node> GetNodesData() {
 		return editor.GetNodesData();
+	}
+
+	std::set<std::string>& GetCallbacksMutable() {
+		return editor.GetCallbacks();
 	}
 
 	/*************************************

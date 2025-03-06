@@ -11,10 +11,12 @@
 #include "imgui_markdown.h"
 #include <nlohmann/json.hpp>
 #include "Utils.h";
+#include <algorithm>
 
 #include <string>
 #include <format>
 #include <iostream>
+#include <set>
 
 using json = nlohmann::json;
 
@@ -172,7 +174,8 @@ namespace ede {
 
 		ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
-		ImGui::BeginChild("ScrollableText", ImVec2(0, raw_text_block_height), true);
+		ImGui::BeginChild("ScrollableText", ImVec2(0, raw_text_block_height + 15), true);
+		ImGui::SeparatorText("Raw string");
 		ImGui::InputTextMultiline("##rawdata",
 			raw_info.data(),
 			raw_info.size() + 1,
@@ -184,6 +187,25 @@ namespace ede {
 
 		ImGui::BeginChild("CallbackEvents", ImVec2(0, 300), true);
 		ImGui::SeparatorText("Callback events");
+		std::set<std::string>& current_callbacks = ede::GetCallbacksMutable();
+		ImGui::Indent();
+		for (auto& callback : current_callbacks) {
+			TEXT_BULLET("-", callback.c_str());
+			ImGui::SameLine();
+			if (ImGui::Button("X")) {
+				auto it = std::find(current_callbacks.begin(), current_callbacks.end(), callback);
+				if (it != current_callbacks.end()) {
+					current_callbacks.erase(it);
+				}
+			}
+		}
+		ImGui::Unindent();
+		static char new_callback[128] = "";
+		if (ImGui::InputTextWithHint("##callback_input", "New callback string...", new_callback, IM_ARRAYSIZE(new_callback), ImGuiInputTextFlags_::ImGuiInputTextFlags_EnterReturnsTrue) 
+			|| ImGui::Button("Add")) {
+			current_callbacks.insert(new_callback);
+			strcpy(new_callback, "");
+		}
 		ImGui::EndChild();
 
 		ImGui::End();

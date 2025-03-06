@@ -9,6 +9,7 @@
 #include <vector>
 #include "imnodes.h"
 #include <imgui.h>
+#include <set>
 #include <nlohmann/json.hpp>
 
 /******************************************************************************
@@ -42,6 +43,7 @@ struct Node
     int prevNodeId = -1;
     std::vector<int> responses;
     bool             expectesResponse;
+    std::set<std::string> selected_callbacks;
 
     SpeechNode* AsSpeech();
 
@@ -79,7 +81,7 @@ struct ResponseNode : public Node
     }
 };
 
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Node, id, nodeType, text, nextNodeId, responses);
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Node, id, nodeType, text, nextNodeId, responses, selected_callbacks);
 // TODO create a wrapper that exports the current state of the program including links
 
 inline SpeechNode* Node::AsSpeech()
@@ -104,5 +106,10 @@ struct Link
     bool EndsWithNode(int endNodeId) {
         return end_attr == endNodeId << NodePartShift::InputPin;
     }
+};
+
+struct Conditional {
+    std::string name;
+    bool value;
 };
 

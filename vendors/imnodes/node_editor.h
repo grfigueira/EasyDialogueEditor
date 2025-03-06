@@ -6,6 +6,8 @@
 
 #pragma once
 #include "Node.h"
+#include <set>
+
 
 namespace ede
 {
@@ -14,6 +16,7 @@ namespace ede
 	void NodeEditorShutdown();
 	void InitializeConversation();
 	std::vector<Node*> GetNodesVec();
+	std::set<std::string>& GetCallbacksMutable();
 	int GetNumNodesOfType(NodeType type);
 	void ToggleDemoWindow();
 	void ToggleAboutWindow();
