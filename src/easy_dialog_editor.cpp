@@ -431,7 +431,7 @@ namespace ede
 					ImNodes::BeginOutputAttribute(node_id << 24);
 					ImGui::TextUnformatted("output");
 					ImNodes::EndOutputAttribute();
-
+					
 					ImGui::Dummy(ImVec2(0.0f, 4.0f));
 
 					ImNodes::EndNode();

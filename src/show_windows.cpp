@@ -17,6 +17,7 @@
 #include <format>
 #include <iostream>
 #include <set>
+#include <imgui_internal.h>
 
 using json = nlohmann::json;
 
@@ -42,20 +43,25 @@ namespace ede {
 			ImGui::End();
 			return;
 		}
-		ImGui::SetWindowSize(ImVec2(550, 400), ImGuiCond_::ImGuiCond_Once);
+		ImGui::SetWindowSize(ImVec2(550, 335), ImGuiCond_::ImGuiCond_Once);
 		ImGui::SeparatorText("About EasyDialogueEditor");
 		ImGui::Indent();
-		TEXT_BULLET("-", "EasyDialogueEditor is a FOSS and lightweight dialogue tree editor for games.");
-		TEXT_BULLET("-", "It allows you to visually create dialog trees and export them as JSON files. It is not a dialog system, but rather a way of visually creating and editing dialog assets. As such, it will work on any dialog system and game engine as long as you deserialize the JSON files on your end.");
+		TEXT_BULLET(">", "EasyDialogueEditor is a FOSS and lightweight dialogue tree editor for games.");
+		TEXT_BULLET(">", "It allows you to visually create dialog trees and export them as JSON files. It is not a dialog system, but rather a way of visually creating and editing dialog assets. As such, it will work on any dialog system and game engine as long as you deserialize the JSON files on your end.");
 		ImGui::Unindent();
+		ImGui::Dummy(ImVec2(0.0f, 5.f));
 		ImGui::SeparatorText("Made possible by open-source");
-		ImGui::TextWrapped("This project was created with the help of the following open-source projects");
+		ImGui::Dummy(ImVec2(0.0f, 5.f));
+		ImGui::TextWrapped("This project was created with the help of the following open-source libraries:");
 		ImGui::Indent();
-		TEXT_BULLET("-", "ImGui");
-		TEXT_BULLET("-", "ImNodes");
-		TEXT_BULLET("-", "SDL2");
+		TEXT_BULLET(">", "ocornut/imgui");
+		TEXT_BULLET(">", "Nelarius/imnodes");
+		TEXT_BULLET(">", "nlohmann/json");
+		TEXT_BULLET(">", "SDL2");
 		ImGui::Unindent();
+		ImGui::Dummy(ImVec2(0.0f, 5.f));
 		ImGui::Separator();
+		ImGui::Dummy(ImVec2(0.0f, 5.f));
 		ImGui::TextWrapped("Created by Guilherme Figueira");
 		//MarkdownAboutSection();
 		ImGui::End();
@@ -128,7 +134,9 @@ namespace ede {
 
 		ImGui::BeginChild("Node List", ImVec2(0, current_window_height-415), true, ImGuiWindowFlags_::ImGuiWindowFlags_HorizontalScrollbar |
 			ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysVerticalScrollbar);
-		ImGui::SeparatorText("Current state");
+		ImGui::SeparatorTextEx(0, "Current state", NULL, ImGui::CalcTextSize(" (?)").x);
+		ImGui::SameLine();
+		HelpMarker("Displays how the current state will be exported");
 		ImGui::Dummy(ImVec2(0.0f, 5.0f));
 		std::string raw_info;
 
@@ -171,7 +179,9 @@ namespace ede {
 		ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
 		ImGui::BeginChild("ScrollableText", ImVec2(0, raw_text_block_height + 15), true);
-		ImGui::SeparatorText("Raw string");
+		ImGui::SeparatorTextEx(0, "Raw string", NULL, ImGui::CalcTextSize(" (?)").x);
+		ImGui::SameLine();
+		HelpMarker("Raw JSON output. In case you want to quickly copy and paste somewhere");
 		ImGui::InputTextMultiline("##rawdata",
 			raw_info.data(),
 			raw_info.size() + 1,
@@ -182,13 +192,27 @@ namespace ede {
 		ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
 		ImGui::BeginChild("CallbackEvents", ImVec2(0, ImGui::GetContentRegionAvail().y), true);
-		ImGui::SeparatorText("Callback events tags");
+		ImGui::SeparatorTextEx(0, "Callback events tags", NULL, ImGui::CalcTextSize(" (?)").x);
 		ImGui::SameLine();
-		HelpMarker("Adding \"callback tags\" to nodes can be useful to trigger callback events in your dialog system when a node is displayed");
+		ImGui::TextDisabled("(?)");
+		if (ImGui::BeginItemTooltip())
+		{
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+			ImGui::TextUnformatted("Adding \"callback tags\" to nodes can be useful to trigger callback events in your dialog system when a node is displayed");
+			ImGui::TextUnformatted("For example:");
+			ImGui::Indent();
+			TEXT_BULLET(">", "You may have a riddle speech node connected to multiple response nodes");
+			TEXT_BULLET(">", "One of the response nodes can have a \"pass_riddle\" callback tag that triggers an event in-game that unlocks a door or something");
+			TEXT_BULLET(">", "Other reponses can have a \"trigger_battle\" callback tag that triggers a battle if the player chooses that response");
+			ImGui::Unindent();
+			ImGui::TextUnformatted("Just remember to check for these tags in your game's system");
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
+		}
 		std::set<std::string>& current_callbacks = ede::GetCallbacksMutable();
 		ImGui::Indent();
 		for (auto& callback : current_callbacks) {
-			TEXT_BULLET("-", callback.c_str());
+			TEXT_BULLET(">", callback.c_str());
 			ImGui::SameLine();
 			if (ImGui::Button("X")) {
 				auto it = std::find(current_callbacks.begin(), current_callbacks.end(), callback);

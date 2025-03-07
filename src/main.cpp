@@ -66,7 +66,7 @@
      SDL_WindowFlags window_flags =
          (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
      SDL_Window* window = SDL_CreateWindow(
-         "EasyDialogEditor v0.1.0 [beta]",
+         "EasyDialogueEditor v0.1.5 [beta]",
          SDL_WINDOWPOS_CENTERED,
          SDL_WINDOWPOS_CENTERED,
          1440,
