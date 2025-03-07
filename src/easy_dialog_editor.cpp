@@ -389,18 +389,30 @@ namespace ede
 						const char* combo_preview_value = "Select callback";
 					}
 
-					if (ImGui::BeginCombo("Callback(s)", combo_preview_value, ImGuiComboFlags_::ImGuiComboFlags_WidthFitPreview))
+					if (ImGui::BeginCombo("Callback tags", combo_preview_value, ImGuiComboFlags_::ImGuiComboFlags_WidthFitPreview))
 					{
+						ImGui::PushItemFlag(ImGuiItemFlags_::ImGuiItemFlags_SelectableDontClosePopup, true);
 						for (auto& callback : current_state.callbacks)
 						{
 							const bool is_selected = node->selected_callbacks.contains(callback);
-							if (ImGui::Selectable(callback.c_str(), is_selected))
-								node->selected_callbacks.insert(callback);
+							if (ImGui::Selectable(callback.c_str(), is_selected)) {
+
+								// callback tag was already selected
+								if(!node->selected_callbacks.insert(callback).second) {
+
+									auto it = node->selected_callbacks.find(callback);
+
+									if (it != node->selected_callbacks.end()) {
+										node->selected_callbacks.erase(it);
+									}
+								}
+							}
 
 							// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
 							if (is_selected)
 								ImGui::SetItemDefaultFocus();
 						}
+						ImGui::PopItemFlag();
 						ImGui::EndCombo();
 					}
 

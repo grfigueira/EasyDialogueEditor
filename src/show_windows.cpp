@@ -24,27 +24,17 @@ using json = nlohmann::json;
 
 namespace ede {
 
-//	void Markdown(const std::string& markdown_); // forward declared
-//
-//	void MarkdownAboutSection()
-//	{
-//		const char* markdownText = (const char*)u8R"(
-//**EasyDialogEditor** is a lightweight dialog tree editor for games, designed to help you visually create dialog flows and export them as JSON. While it's _not_ a dialog system itself, it perfectly complements any existing system if you parse the generated data on your end. The result is a portable solution for building branching dialogues.
-//
-//**Features**
-//- Lightweight and portable, no installation required.
-//- Visual creation of dialog trees
-//- Straightforward JSON export for easy integration
-//- Free and open-source
-//# Credits
-//Created by [Guilherme Figueira](https://grfigueira.github.io/MyPortfolio/)
-//GitHub repository: [github.com/grfigueira/EasyDialogEditor](https://github.com/grfigueira/EasyDialogEditor)
-//## Built With
-//- [Dear ImGui](https://github.com/ocornut/imgui)
-//- [ImNodes](https://github.com/Nelarius/imnodes)
-//- [SDL2](https://www.libsdl.org/))";
-//		Markdown(markdownText);
-//	}
+	static void HelpMarker(const char* desc)
+	{
+		ImGui::TextDisabled("(?)");
+		if (ImGui::BeginItemTooltip())
+		{
+			ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+			ImGui::TextUnformatted(desc);
+			ImGui::PopTextWrapPos();
+			ImGui::EndTooltip();
+		}
+	}
 
 	void ShowAboutWindow(bool* p_open) {
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10.0f, 10.0f));
@@ -136,7 +126,7 @@ namespace ede {
 
 		int current_window_height = ImGui::GetContentRegionAvail().y - raw_text_block_height;
 
-		ImGui::BeginChild("Node List", ImVec2(0, current_window_height-300), true, ImGuiWindowFlags_::ImGuiWindowFlags_HorizontalScrollbar |
+		ImGui::BeginChild("Node List", ImVec2(0, current_window_height-415), true, ImGuiWindowFlags_::ImGuiWindowFlags_HorizontalScrollbar |
 			ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysVerticalScrollbar);
 		ImGui::SeparatorText("Current state");
 		ImGui::Dummy(ImVec2(0.0f, 5.0f));
@@ -150,10 +140,16 @@ namespace ede {
 					for (int response : speech_node->responses) {
 						ss << " " << response << " ";
 					}
+					if (speech_node->responses.empty())
+						ss << " ";
 					ss << "}";
 					raw_info += std::format(R"([{{ "id": "{}" ; "type": "Speech" ; "next_node_id": "{}" ; "expected_responses": "{}" }} ; )",
 						node->id, node->nextNodeId, ss.str());
-					ImGui::Text(std::format("Node {}: {{\n  \"id\": \"{}\",\n  \"type\": \"Speech\",\n \"text\": \"{}\",\n  \"next_node_id\": \"{}\",\n  \"expected_responses\": \"{}\"\n}}", node->id, node->id, node->text.c_str(), node->nextNodeId, ss.str().c_str()).c_str());
+					std::set<std::string>& current_callbacks = node->selected_callbacks;
+					std::ostringstream stream;
+					std::copy(current_callbacks.begin(), current_callbacks.end(), std::ostream_iterator<std::string>(stream, " "));
+					std::string result_str = stream.str();
+					ImGui::Text(std::format("Node {}: {{\n  \"id\": \"{}\",\n  \"type\": \"Speech\",\n \"text\": \"{}\",\n  \"next_node_id\": \"{}\",\n  \"expected_responses\": \"{}\",\n \"callbacks\": \"{{ {}}}\"\n}}", node->id, node->id, node->text, node->nextNodeId, ss.str(), result_str).c_str());
 
 				}
 				if (ResponseNode* response_node = node->AsResponse()) {
@@ -185,8 +181,10 @@ namespace ede {
 
 		ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
-		ImGui::BeginChild("CallbackEvents", ImVec2(0, 300), true);
-		ImGui::SeparatorText("Callback events");
+		ImGui::BeginChild("CallbackEvents", ImVec2(0, ImGui::GetContentRegionAvail().y), true);
+		ImGui::SeparatorText("Callback events tags");
+		ImGui::SameLine();
+		HelpMarker("Adding \"callback tags\" to nodes can be useful to trigger callback events in your dialog system when a node is displayed");
 		std::set<std::string>& current_callbacks = ede::GetCallbacksMutable();
 		ImGui::Indent();
 		for (auto& callback : current_callbacks) {
@@ -200,11 +198,22 @@ namespace ede {
 			}
 		}
 		ImGui::Unindent();
+
 		static char new_callback[128] = "";
-		if (ImGui::InputTextWithHint("##callback_input", "New callback string...", new_callback, IM_ARRAYSIZE(new_callback), ImGuiInputTextFlags_::ImGuiInputTextFlags_EnterReturnsTrue) 
+
+		// user requests addition of new callback tag
+		if (ImGui::InputTextWithHint("##callback_input", "New callback tag...", new_callback, IM_ARRAYSIZE(new_callback), ImGuiInputTextFlags_::ImGuiInputTextFlags_EnterReturnsTrue) 
 			|| ImGui::Button("Add")) {
-			current_callbacks.insert(new_callback);
-			strcpy(new_callback, "");
+			std::string callback_str = new_callback;
+			
+			// is callback tag valid, i.e. not empty or blank
+			if(!callback_str.empty() 
+				&& !std::all_of(callback_str.begin(), callback_str.end(), [](unsigned char c) {return std::isspace(c);})) 
+			{
+				current_callbacks.insert(new_callback);
+				strcpy(new_callback, "");
+				ImGui::SetKeyboardFocusHere(-1);
+			}			
 		}
 		ImGui::EndChild();
 

@@ -60,7 +60,6 @@ namespace ede {
 
 	}
 
-
 	void FileDialogs::ExportDialogueJsonFile()
 	{
 		std::vector<Node> nodes = ede::GetNodesData();
