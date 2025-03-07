@@ -12,8 +12,7 @@ Built with [ImGui](https://github.com/ocornut/imgui), [ImNodes](https://github.c
 
 It currently only runs natively on **Windows**.
 
-![EDE_gif_demo-ezgif com-resize](https://github.com/user-attachments/assets/e1d04469-09dc-4beb-929b-72f3259e2888)
-
+![420433679-4aca71f5-2ccc-415b-8c6a-5a72911433f3](https://github.com/user-attachments/assets/cfca8c84-73b3-4964-bfe5-4b2833f85395)
 
 ## How to build
 
