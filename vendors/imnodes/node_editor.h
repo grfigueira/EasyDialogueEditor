@@ -21,4 +21,5 @@ namespace ede
 	void ToggleDemoWindow();
 	void ToggleAboutWindow();
 	std::vector<Node> GetNodesData();
+	void NotifyCallbackDeletion(const std::string& deleted_callback);
 } // namespace storyteller

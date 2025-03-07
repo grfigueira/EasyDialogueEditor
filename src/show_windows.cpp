@@ -142,6 +142,10 @@ namespace ede {
 
 		for (Node* node : nodes) {
 			if (node) {
+				std::set<std::string>& current_callbacks = node->selected_callbacks;
+				std::ostringstream stream;
+				std::copy(current_callbacks.begin(), current_callbacks.end(), std::ostream_iterator<std::string>(stream, " "));
+				std::string result_str = stream.str();
 				if (SpeechNode* speech_node = node->AsSpeech()) {
 					std::stringstream ss;
 					ss << "{";
@@ -151,21 +155,18 @@ namespace ede {
 					if (speech_node->responses.empty())
 						ss << " ";
 					ss << "}";
-					raw_info += std::format(R"([{{ "id": "{}" ; "type": "Speech" ; "next_node_id": "{}" ; "expected_responses": "{}" }} ; )",
-						node->id, node->nextNodeId, ss.str());
-					std::set<std::string>& current_callbacks = node->selected_callbacks;
-					std::ostringstream stream;
-					std::copy(current_callbacks.begin(), current_callbacks.end(), std::ostream_iterator<std::string>(stream, " "));
-					std::string result_str = stream.str();
+					raw_info += std::format(R"([{{ "id": "{}" ; "type": "Speech" ; "next_node_id": "{}" ; "expected_responses": "{}" }} ; "callbacks": "{}")",
+						node->id, node->nextNodeId, ss.str(), result_str);
+					
 					ImGui::Text(std::format("Node {}: {{\n  \"id\": \"{}\",\n  \"type\": \"Speech\",\n \"text\": \"{}\",\n  \"next_node_id\": \"{}\",\n  \"expected_responses\": \"{}\",\n \"callbacks\": \"{{ {}}}\"\n}}", node->id, node->id, node->text, node->nextNodeId, ss.str(), result_str).c_str());
 
 				}
 				if (ResponseNode* response_node = node->AsResponse()) {
 
-					raw_info += std::format(R"([{{ "id": "{}" ; "type": "Response" ; "next_node_id": "{}" }} ; )",
-						node->id, node->nextNodeId);
+					raw_info += std::format(R"([{{ "id": "{}" ; "type": "Response" ; "next_node_id": "{}" ; "callbacks": "{}" }} ; )",
+						node->id, node->nextNodeId, result_str);
 
-					ImGui::Text("Node %d: {\n  \"id\": \"%d\",\n  \"type\": \"Response\",\n  \"next_node_id\": \"%d\"\n}", node->id, node->id, node->nextNodeId);
+					ImGui::Text(std::format("Node {}: {{\n  \"id\": \"{}\",\n  \"type\": \"Response\",\n  \"next_node_id\": \"{}\",\n \"callbacks\": \"{{ {}}}\"\n}}", node->id, node->id, node->nextNodeId, result_str).c_str());
 
 				}
 				ImGui::Dummy(ImVec2(0.0f, 2.0f));
@@ -211,14 +212,20 @@ namespace ede {
 		}
 		std::set<std::string>& current_callbacks = ede::GetCallbacksMutable();
 		ImGui::Indent();
-		for (auto& callback : current_callbacks) {
+
+		// display current callback tags and delete buttons
+		for (auto it = current_callbacks.begin(); it != current_callbacks.end();) {
+
+			const auto& callback = *it;
 			TEXT_BULLET(">", callback.c_str());
 			ImGui::SameLine();
-			if (ImGui::Button("X")) {
-				auto it = std::find(current_callbacks.begin(), current_callbacks.end(), callback);
-				if (it != current_callbacks.end()) {
-					current_callbacks.erase(it);
-				}
+			std::string button_label = "X##" + callback;
+			if (ImGui::Button(button_label.c_str())) {
+				ede::NotifyCallbackDeletion(callback);
+				it = current_callbacks.erase(it);
+			}
+			else {
+				++it;
 			}
 		}
 		ImGui::Unindent();
@@ -242,29 +249,6 @@ namespace ede {
 		ImGui::EndChild();
 
 		ImGui::End();
-	}
-
-	/*******************************************************
-	*                   Helper methods
-	*******************************************************/
-
-	void LinkCallback(ImGui::MarkdownLinkCallbackData data_);
-	inline ImGui::MarkdownImageData ImageCallback(ImGui::MarkdownLinkCallbackData data_);
-
-	static ImFont* H1 = NULL;
-	static ImFont* H2 = NULL;
-	static ImFont* H3 = NULL;
-
-	static ImGui::MarkdownConfig mdConfig;
-
-
-	void LinkCallback(ImGui::MarkdownLinkCallbackData data_)
-	{
-		std::string url(data_.link, data_.linkLength);
-		if (!data_.isImage)
-		{
-			ShellExecuteA(NULL, "open", url.c_str(), NULL, NULL, SW_SHOWNORMAL);
-		}
 	}
 
 }

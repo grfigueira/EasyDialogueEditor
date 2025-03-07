@@ -66,7 +66,7 @@
      SDL_WindowFlags window_flags =
          (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
      SDL_Window* window = SDL_CreateWindow(
-         "EasyDialogueEditor v0.1.5 [beta]",
+         "EasyDialogueEditor v0.2.0 [beta]",
          SDL_WINDOWPOS_CENTERED,
          SDL_WINDOWPOS_CENTERED,
          1440,
@@ -145,6 +145,7 @@ DockSpace     ID=0x5F4274ED Window=0x1F1D7494 Pos=0,0 Size=1440,900 Split=X
 )INI";
 
      ImGui::LoadIniSettingsFromMemory(DEFAULT_INI);
+	 ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
      
      // Main loop
      while (!done)
@@ -205,6 +206,7 @@ DockSpace     ID=0x5F4274ED Window=0x1F1D7494 Pos=0,0 Size=1440,900 Split=X
      }
  
      // Cleanup
+     ImGui::PopStyleVar(1);
      ImGui_ImplOpenGL3_Shutdown();
      ImGui_ImplSDL2_Shutdown();
      ede::NodeEditorShutdown();

@@ -157,21 +157,28 @@ namespace ede
 			{
 				int start_node_id = start_attr >> NodePartShift::EndPin;
 				int end_node_id = end_attr >> NodePartShift::InputPin;
+				Node* start_node = current_state.nodes[start_node_id];
+				Node* end_node = current_state.nodes[end_node_id];
 
-				if (SpeechNode* start_speech_node = current_state.nodes[start_node_id]->AsSpeech()) {
-					if (ResponseNode* end_response_node = current_state.nodes[end_node_id]->AsResponse()) {
-						if (!start_speech_node->expectesResponse) {
+				if (start_node->nodeType == NodeType::Speech) {
+					if (end_node->nodeType == NodeType::Response) {
+						if (!start_node->expectesResponse) {
 							return;
 						}
 						else {
-							start_speech_node->responses.push_back(end_node_id);
-							end_response_node->prevNodeId = start_node_id;
+							start_node->responses.push_back(end_node_id);
+							end_node->prevNodeId = start_node_id;
 						}
 					}
 					else {
-						start_speech_node->nextNodeId = end_node_id;
+						start_node->nextNodeId = end_node_id;
 					}
 				}
+
+				if (start_node->nodeType == NodeType::Response && end_node->nodeType == NodeType::Response) {
+					return;
+				}
+				
 				Link* link = new Link{ ++current_state.next_link_id, start_attr, end_attr };
 				current_state.links[link->id] = link;
 
@@ -456,6 +463,14 @@ namespace ede
 			void ToggleAboutWindow() {
 				bShowAboutSection = !bShowAboutSection;
 			}
+			void NotifyCallbackDeletion(const std::string& deleted_callback) {
+				for (auto& node_pair : current_state.nodes) {
+					Node* node = node_pair.second;
+					if (node) {
+						node->selected_callbacks.erase(deleted_callback);
+					}
+				}
+			}
 
 			/******************************************************************************
 			 ******************************************************************************/
@@ -485,7 +500,7 @@ namespace ede
 		style.PinHoverRadius = 10.0f;
 
 		style.NodePadding = ImVec2(8.0f, 8.0f);
-		style.NodeCornerRounding = 4.0f;
+		style.NodeCornerRounding = 6.0f;
 		style.NodeBorderThickness = 1.0f;
 	}
 
@@ -541,6 +556,10 @@ namespace ede
 	
 	void ToggleAboutWindow() {
 		editor.ToggleAboutWindow();
+	}
+
+	void NotifyCallbackDeletion(const std::string& deleted_callback) {
+		editor.NotifyCallbackDeletion(deleted_callback);
 	}
 
 } // namespace storyteller
