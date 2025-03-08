@@ -47,8 +47,8 @@ R: The program currently only runs natively on Windows. It should work on Linux 
 ## TODO
 Planned upcoming features: 
 - [x] Event callback tags;
-- [ ] Conditionals;
-- [ ] Character names in Speech nodes;
-- [ ] Simple dialogue player window;
 - [ ] Save/Load graph states;
-- [ ] Undo/Redo 
+- [ ] Undo/Redo
+- [ ] Character names in Speech nodes;
+- [ ] Conditionals;
+- [ ] Simple dialogue player window;
