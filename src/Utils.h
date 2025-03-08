@@ -18,6 +18,7 @@ namespace ede {
 		//static std::string OpenFile(const char* filter);
 		static void SaveFile(const json& j);
 		static void ExportDialogueJsonFile();
+		static void ExportStateJsonFile();
 
 	};
 }

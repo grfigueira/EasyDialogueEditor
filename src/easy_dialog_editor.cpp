@@ -31,14 +31,6 @@ namespace ede
 	// makes the 'StoryTellerNodeEditor editor' instance global in this cpp file only
 	namespace
 	{
-		struct State {
-			std::unordered_map<int, Node*>                 nodes; // maybe these should be smart pointers?
-			std::unordered_map<int, Link*>                 links;
-			int                                next_node_id = -1;
-			int                                next_link_id = -1;
-			std::set<std::string> callbacks;
-			std::set<Conditional> conditionals;
-		};
 
 		class EasyDialogEditor
 		{
@@ -258,6 +250,10 @@ namespace ede
 					res.push_back(*node);
 				}
 				return res;
+			}
+
+			const State& GetCurrentState() const {
+				return current_state;
 			}
 
 			/******************************************************************************
@@ -486,7 +482,7 @@ namespace ede
 		// spawn root node of conversation
 		editor.AddNode("Conversation starter", ImVec2(150, ImGui::GetWindowSize().y / 1.2), NodeType::Speech);
 	}
-
+	
 	void NodeEditorInitialize()
 	{
 		ImNodes::SetNodeGridSpacePos(1, ImVec2(200.0f, 200.0f));
@@ -544,6 +540,10 @@ namespace ede
 
 	std::set<std::string>& GetCallbacksMutable() {
 		return editor.GetCallbacks();
+	}
+
+	const State& GetCurrentState() {
+		return editor.GetCurrentState();
 	}
 
 	/*************************************

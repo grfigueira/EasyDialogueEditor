@@ -79,6 +79,9 @@ namespace ede {
 			{
 				ImGui::SetTooltip("Not yet implemented");
 			}
+			if (ImGui::BeginMenu("Save As")) {
+				ede::FileDialogs::ExportStateJsonFile();
+			}
 			if (ImGui::BeginMenu("Export")) {
 				if (ImGui::MenuItem("JSON", "Ctrl+X")) {
 					ede::FileDialogs::ExportDialogueJsonFile();

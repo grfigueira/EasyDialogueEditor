@@ -71,4 +71,8 @@ namespace ede {
 		FileDialogs::SaveFile(j);
 	}
 
+	void FileDialogs::ExportStateJsonFile() {
+		json j = ede::GetCurrentState();
+		
+	}
 }

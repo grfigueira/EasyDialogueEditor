@@ -17,6 +17,7 @@ namespace ede
 	void InitializeConversation();
 	std::vector<Node*> GetNodesVec();
 	std::set<std::string>& GetCallbacksMutable();
+	const State& GetCurrentState();
 	int GetNumNodesOfType(NodeType type);
 	void ToggleDemoWindow();
 	void ToggleAboutWindow();

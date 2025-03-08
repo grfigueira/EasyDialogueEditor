@@ -113,3 +113,20 @@ struct Conditional {
     bool value;
 };
 
+struct State {
+	std::unordered_map<int, Node*>                 nodes{}; // maybe these should be smart pointers?
+	std::unordered_map<int, Link*>                 links{};
+	int                                next_node_id = -1;
+	int                                next_link_id = -1;
+	std::set<std::string> callbacks{};
+	std::set<Conditional> conditionals{};
+};
+
+// JSON friendly wrapper
+struct StateWrapper {
+    std::vector<Node> nodes{};
+    std::vector<Link> nodes{};
+
+};
+
+NLOHMANN_DEFINE_TYPE_INTRUSIVE(State, nodes, links, next_node_id, next_link_id, callbacks);
