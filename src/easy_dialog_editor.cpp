@@ -101,7 +101,7 @@ namespace ede
 				{
 					for (const auto& pair : current_state.nodes)
 					{
-						Node* node = pair.second;
+						std::shared_ptr<Node> node = pair.second;
 						if (node) {
 							 std::string header_text = std::format("{} | id: {}", NodeTypeStrings[node->nodeType], node->id);
 							DrawNode(node->id, header_text.c_str());
@@ -110,7 +110,7 @@ namespace ede
 
 					for (const auto& pair : current_state.links)
 					{
-						Link* link = pair.second;
+						std::shared_ptr<Link> link = pair.second;
 						if (link) {
 							ImNodes::Link(link->id, link->start_attr, link->end_attr);
 						}
@@ -149,8 +149,8 @@ namespace ede
 			{
 				int start_node_id = start_attr >> NodePartShift::EndPin;
 				int end_node_id = end_attr >> NodePartShift::InputPin;
-				Node* start_node = current_state.nodes[start_node_id];
-				Node* end_node = current_state.nodes[end_node_id];
+				std::shared_ptr<Node> start_node = current_state.nodes[start_node_id];
+				std::shared_ptr<Node> end_node = current_state.nodes[end_node_id];
 
 				if (start_node->nodeType == NodeType::Speech) {
 					if (end_node->nodeType == NodeType::Response) {
@@ -171,7 +171,7 @@ namespace ede
 					return;
 				}
 				
-				Link* link = new Link{ ++current_state.next_link_id, start_attr, end_attr };
+				std::shared_ptr<Link> link = std::make_shared<Link>(++current_state.next_link_id, start_attr, end_attr);
 				current_state.links[link->id] = link;
 
 			}
@@ -184,30 +184,35 @@ namespace ede
 				{
 					bShowCreateNodeTooltip = false;
 					LOG("linked dropped");
-					Node* start_node = current_state.nodes[started_attr >> NodePartShift::EndPin];
+					std::shared_ptr<Node> start_node = current_state.nodes[started_attr >> NodePartShift::EndPin];
 
-					if (SpeechNode* speech_start_node = start_node->AsSpeech())
+					if (start_node)
 					{
-						if (speech_start_node->expectesResponse)
+						if (start_node->expectesResponse)
 						{
-							Node* newNode = AddNode("Yes/No", ImGui::GetMousePos(), NodeType::Response);
+							std::shared_ptr<Node> newNode = AddNode("Yes/No", ImGui::GetMousePos(), NodeType::Response);
 							newNode->prevNodeId = started_attr >> NodePartShift::EndPin;
 
-							Link* link = new Link{
-								++current_state.next_link_id, started_attr, current_state.next_node_id << NodePartShift::InputPin };
+							std::shared_ptr<Link> link = std::make_shared<Link>(
+								++current_state.next_link_id, started_attr, current_state.next_node_id << NodePartShift::InputPin);
+
 							current_state.links[current_state.next_link_id] = link;
-							speech_start_node->responses.push_back(current_state.next_node_id);
+
+							start_node->responses.push_back(current_state.next_node_id);
+
 							return;
 						}
 					}
 					if (start_node->nextNodeId == -1) // isn't connected to any node yet
 					{
-						Node* newNode = AddNode("This is interesting...", ImGui::GetMousePos(), NodeType::Speech);
+						std::shared_ptr<Node> newNode = AddNode("This is interesting...", ImGui::GetMousePos(), NodeType::Speech);
 						newNode->prevNodeId = started_attr >> NodePartShift::EndPin;
 
-						Link* link = new Link{
-							++current_state.next_link_id, started_attr, current_state.next_node_id << NodePartShift::InputPin };
+						std::shared_ptr<Link> link = std::make_shared<Link>(
+							++current_state.next_link_id, started_attr, current_state.next_node_id << NodePartShift::InputPin);
+
 						current_state.links[current_state.next_link_id] = link;
+
 						start_node->nextNodeId = current_state.next_node_id;
 					}
 				}
@@ -235,7 +240,7 @@ namespace ede
 			std::vector<int> GetConnectedLinks(int node_id) {
 				std::vector<int> resIds;
 				for (const auto& pair : current_state.links) {
-					Link* link = pair.second;
+					std::shared_ptr<Link> link = pair.second;
 					if (link->EndsWithNode(node_id) || link->StartsWithNode(node_id)) {
 						resIds.push_back(link->id);
 					}
@@ -246,7 +251,7 @@ namespace ede
 			std::vector<Node> GetNodesData() {
 				std::vector<Node> res;
 				for (const auto& pair : current_state.nodes) {
-					Node* node = pair.second;
+					std::shared_ptr<Node> node = pair.second;
 					res.push_back(*node);
 				}
 				return res;
@@ -261,20 +266,12 @@ namespace ede
 			 ******************************************************************************/
 
 			 // addition of node to state data
-			Node* AddNode(const char* text, ImVec2 pos, NodeType type)
+			std::shared_ptr<Node> AddNode(const char* text, ImVec2 pos, NodeType type)
 			{
 				pos.y -= 110.f;
 
-				Node* node{};
-				switch (type)
-				{
-				case NodeType::Speech:
-					node = new SpeechNode(++current_state.next_node_id, text, pos);
-					break;
-				case NodeType::Response:
-					node = new ResponseNode(++current_state.next_node_id, text, pos);
-					break;
-				}
+				std::shared_ptr<Node> node = std::make_shared<Node>(++current_state.next_node_id, type, text, pos);
+
 				if (node) {
 					ImNodes::SetNodeScreenSpacePos(node->id, node->position);
 				}
@@ -303,21 +300,18 @@ namespace ede
 								current_state.links.erase(link_id);
 							}
 
-							if (Node* node = current_state.nodes[node_id]) {
+							if (std::shared_ptr<Node> node = current_state.nodes[node_id]) {
 
-								if (Node* prev_node = current_state.nodes[node->prevNodeId]) {
+								if (std::shared_ptr<Node> prev_node = current_state.nodes[node->prevNodeId]) {
 									prev_node->nextNodeId = -1;
-
 									if (node->nodeType == NodeType::Response) {
-										if (SpeechNode* prev_speech_node = prev_node->AsSpeech()) {
-											std::vector<int>& responses = prev_speech_node->responses;
+											std::vector<int>& responses = prev_node->responses;
 											responses.erase(std::remove(responses.begin(), responses.end(), node_id), responses.end());
-										}
 									}
 								}
 
 								if (node->nextNodeId != -1) {
-									if (Node* next_node = current_state.nodes[node->nextNodeId]) {
+									if (std::shared_ptr<Node> next_node = current_state.nodes[node->nextNodeId]) {
 										next_node->prevNodeId = -1;
 										std::cout << "next_node info: " << next_node->id << "\n";
 									}
@@ -336,7 +330,7 @@ namespace ede
 			// Renders a node on the grid
 			void DrawNode(int node_id, const char* HeaderText)
 			{
-				Node* node = current_state.nodes[node_id];
+				std::shared_ptr<Node> node = current_state.nodes[node_id];
 				if (node)
 				{
 
@@ -367,17 +361,16 @@ namespace ede
 					ImNodes::EndStaticAttribute();
 
 					// checkbox
-					if (current_state.nodes[node_id]->nodeType == NodeType::Speech)
+					if (node->nodeType == NodeType::Speech)
 					{
-						SpeechNode* speech_node = current_state.nodes[node_id]->AsSpeech();
-						if (speech_node->nextNodeId == -1 && speech_node->responses.empty())
+						if (node->nextNodeId == -1 && node->responses.empty())
 						{
-							ImGui::Checkbox("Expects response", &current_state.nodes[node_id]->AsSpeech()->expectesResponse);
+							ImGui::Checkbox("Expects response", &node->expectesResponse);
 						}
 						else
 						{
 							ImGui::BeginDisabled();
-							ImGui::Checkbox("Expects response", &current_state.nodes[node_id]->AsSpeech()->expectesResponse);
+							ImGui::Checkbox("Expects response", &node->expectesResponse);
 							ImGui::EndDisabled();
 						}
 					}
@@ -444,7 +437,7 @@ namespace ede
 				}
 			}
 
-			const std::unordered_map<int, Node*>& GetNodesMap() const {
+			const std::unordered_map<int, std::shared_ptr<Node>>& GetNodesMap() const {
 				return current_state.nodes;
 			}
 
@@ -461,7 +454,7 @@ namespace ede
 			}
 			void NotifyCallbackDeletion(const std::string& deleted_callback) {
 				for (auto& node_pair : current_state.nodes) {
-					Node* node = node_pair.second;
+					std::shared_ptr<Node> node = node_pair.second;
 					if (node) {
 						node->selected_callbacks.erase(deleted_callback);
 					}
@@ -508,10 +501,10 @@ namespace ede
 	*               Getters
 	**************************************/
 
-	std::vector<Node*> GetNodesVec() {
+	std::vector<std::shared_ptr<Node>> GetNodesVec() {
 		const auto& nodesMap = editor.GetNodesMap();
 
-		std::vector<Node*> nodes;
+		std::vector<std::shared_ptr<Node>> nodes;
 		nodes.reserve(nodesMap.size());
 
 		for (auto& pair : nodesMap) {

@@ -79,20 +79,29 @@ namespace ede {
 			{
 				ImGui::SetTooltip("Not yet implemented");
 			}
-			if (ImGui::BeginMenu("Save As")) {
-				ede::FileDialogs::ExportStateJsonFile();
+			ImGui::BeginDisabled();
+			if (ImGui::MenuItem("Load")) {
+				ede::FileDialogs::LoadStateJson();
 			}
-			if (ImGui::BeginMenu("Export")) {
-				if (ImGui::MenuItem("JSON", "Ctrl+X")) {
-					ede::FileDialogs::ExportDialogueJsonFile();
-				}
-				ImGui::EndMenu();
+			ImGui::EndDisabled();
+			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+			{
+				ImGui::SetTooltip("Not yet implemented");
+			}
+			if (ImGui::MenuItem("Save As", "Ctrl+S")) {
+				ede::FileDialogs::SaveStateJson();
+			}
+			if (ImGui::MenuItem("Export Dialogue", "Ctrl+X")) {
+				ede::FileDialogs::ExportDialogueJsonFile();
 			}
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Window")) {
 			ImGui::BeginDisabled();
-			if (ImGui::MenuItem("Reset layout")) {}
+			if (ImGui::MenuItem("Reset layout", "Ctrl+R")) {
+				ImGui::LoadIniSettingsFromMemory(DEFAULT_INI);
+				ImGui::MarkIniSettingsDirty();
+			}
 			ImGui::EndDisabled();
 			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
 			{
@@ -123,7 +132,7 @@ namespace ede {
 
 	void ShowGraphInfoWindow()
 	{
-		float raw_text_block_height = 60.0f;
+		float raw_text_block_height = 35.0f;
 		ImGui::Begin("Story Graph Info");
 		auto nodes = ede::GetNodesVec();
 
@@ -143,19 +152,19 @@ namespace ede {
 		ImGui::Dummy(ImVec2(0.0f, 5.0f));
 		std::string raw_info;
 
-		for (Node* node : nodes) {
+		for (const std::shared_ptr<Node>& node : nodes) {
 			if (node) {
 				std::set<std::string>& current_callbacks = node->selected_callbacks;
 				std::ostringstream stream;
 				std::copy(current_callbacks.begin(), current_callbacks.end(), std::ostream_iterator<std::string>(stream, " "));
 				std::string result_str = stream.str();
-				if (SpeechNode* speech_node = node->AsSpeech()) {
+				if (node->nodeType == NodeType::Speech) {
 					std::stringstream ss;
 					ss << "{";
-					for (int response : speech_node->responses) {
+					for (int response : node->responses) {
 						ss << " " << response << " ";
 					}
-					if (speech_node->responses.empty())
+					if (node->responses.empty())
 						ss << " ";
 					ss << "}";
 					raw_info += std::format(R"([{{ "id": "{}" ; "type": "Speech" ; "next_node_id": "{}" ; "expected_responses": "{}" }} ; "callbacks": "{}")",
@@ -164,13 +173,11 @@ namespace ede {
 					ImGui::Text(std::format("Node {}: {{\n  \"id\": \"{}\",\n  \"type\": \"Speech\",\n \"text\": \"{}\",\n  \"next_node_id\": \"{}\",\n  \"expected_responses\": \"{}\",\n \"callbacks\": \"{{ {}}}\"\n}}", node->id, node->id, node->text, node->nextNodeId, ss.str(), result_str).c_str());
 
 				}
-				if (ResponseNode* response_node = node->AsResponse()) {
+				if (node->nodeType == NodeType::Response) {
 
 					raw_info += std::format(R"([{{ "id": "{}" ; "type": "Response" ; "next_node_id": "{}" ; "callbacks": "{}" }} ; )",
 						node->id, node->nextNodeId, result_str);
-
 					ImGui::Text(std::format("Node {}: {{\n  \"id\": \"{}\",\n  \"type\": \"Response\",\n  \"next_node_id\": \"{}\",\n \"callbacks\": \"{{ {}}}\"\n}}", node->id, node->id, node->nextNodeId, result_str).c_str());
-
 				}
 				ImGui::Dummy(ImVec2(0.0f, 2.0f));
 			}
@@ -180,8 +187,8 @@ namespace ede {
 		ImGui::EndChild();
 
 
+		/*
 		ImGui::Dummy(ImVec2(0.0f, 5.0f));
-
 		ImGui::BeginChild("ScrollableText", ImVec2(0, raw_text_block_height + 15), true);
 		ImGui::SeparatorTextEx(0, "Raw string", NULL, ImGui::CalcTextSize(" (?)").x);
 		ImGui::SameLine();
@@ -192,10 +199,10 @@ namespace ede {
 			ImVec2(-1.0f, -1.0f),
 			ImGuiInputTextFlags_ReadOnly);
 		ImGui::EndChild();
-
+		*/
 		ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
-		ImGui::BeginChild("CallbackEvents", ImVec2(0, ImGui::GetContentRegionAvail().y), true);
+		ImGui::BeginChild("CallbackEvents", ImVec2(0, ImGui::GetContentRegionAvail().y - 80), true);
 		ImGui::SeparatorTextEx(0, "Callback events tags", NULL, ImGui::CalcTextSize(" (?)").x);
 		ImGui::SameLine();
 		ImGui::TextDisabled("(?)");
@@ -250,6 +257,13 @@ namespace ede {
 			}			
 		}
 		ImGui::EndChild();
+
+		ImGui::Dummy(ImVec2(0.0f, 5.0f));
+
+		int current_window_width = ImGui::GetContentRegionAvail().x;
+		if(ImGui::Button("Export Dialogue", ImVec2(current_window_width, 60))) {
+			FileDialogs::ExportDialogueJsonFile();
+		}
 
 		ImGui::End();
 	}

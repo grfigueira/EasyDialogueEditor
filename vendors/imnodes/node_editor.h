@@ -15,7 +15,7 @@ namespace ede
 	void NodeEditorShow();
 	void NodeEditorShutdown();
 	void InitializeConversation();
-	std::vector<Node*> GetNodesVec();
+	std::vector<std::shared_ptr<Node>> GetNodesVec();
 	std::set<std::string>& GetCallbacksMutable();
 	const State& GetCurrentState();
 	int GetNumNodesOfType(NodeType type);

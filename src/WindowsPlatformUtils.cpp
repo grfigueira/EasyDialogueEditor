@@ -68,11 +68,53 @@ namespace ede {
 			j.push_back(node);
 		}
 		std::cout << j << std::endl;
-		FileDialogs::SaveFile(j);
+		SaveFile(j);
 	}
 
-	void FileDialogs::ExportStateJsonFile() {
-		json j = ede::GetCurrentState();
+	// Converts state to json
+	void FileDialogs::SaveStateJson() {
+
+		State state = ede::GetCurrentState();
 		
+		json nodes;
+		for (const auto& pair : state.nodes) {
+			std::shared_ptr<Node> node = pair.second;
+			if (node) {
+				nodes.push_back({
+					{"nodeId", node->id},
+					{"nodeType", static_cast<int>(node->nodeType)},
+					{"text", node->text},
+					{"position", {{"x", node->position.x}, {"y", node->position.y}}},
+					{"nextNodeId", node->nextNodeId},
+					{"prevNodeId", node->prevNodeId},
+					{"responses", node->responses},
+					{"expectsResponse", node->expectesResponse},
+					{"selected_callbacks", node->selected_callbacks}
+					});
+			}
+		}
+
+		json links;
+		for (const auto& pair : state.links) {
+			std::shared_ptr<Link> link = pair.second;
+			if (link) {
+				links.push_back(*link);
+			}
+		}
+
+		json j = json{
+			{"nodes", nodes},
+			{"links", links},
+			{"next_node_id", state.next_node_id},
+			{"next_link_id", state.next_link_id},
+			{"callbacks", state.callbacks},
+			/* TODO: place 'conditionals' here, once its implemented */
+		};
+		SaveFile(j);
+	}
+
+	void FileDialogs::LoadStateJson()
+	{
+		std::cout << "Not yet implemented\n";
 	}
 }

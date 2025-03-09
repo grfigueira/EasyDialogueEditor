@@ -9,6 +9,7 @@
  #include <imgui.h>
  #include <imgui_impl_sdl2.h>
  #include <imgui_impl_opengl3.h>
+ #include <imgui_internal.h>
  #include <imnodes.h>
  #include <SDL2/SDL.h>
  #if defined(IMGUI_IMPL_OPENGL_ES2)
@@ -66,7 +67,7 @@
      SDL_WindowFlags window_flags =
          (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
      SDL_Window* window = SDL_CreateWindow(
-         "EasyDialogueEditor v0.2.0 [beta]",
+         "EasyDialogueEditor v0.2.5 [beta]",
          SDL_WINDOWPOS_CENTERED,
          SDL_WINDOWPOS_CENTERED,
          1440,
@@ -107,43 +108,6 @@
      
      bool done = false;
      bool hasRootSpawned = false;
-
-	 static const char* DEFAULT_INI = R"INI(
-[Window][MainDockspace]
-Pos=0,0
-Size=1440,900
-Collapsed=0
-
-[Window][Debug##Default]
-Pos=60,60
-Size=400,400
-Collapsed=0
-
-[Window][Graph Editor]
-Pos=0,0
-Size=1057,900
-Collapsed=0
-DockId=0x00000001,0
-
-[Window][Story Graph Info]
-Pos=1059,0
-Size=381,900
-Collapsed=0
-DockId=0x00000002,0
-
-[Window][Dear ImGui Demo]
-Pos=425,72
-Size=550,680
-Collapsed=0
-
-[Docking][Data]
-DockSpace     ID=0x5F4274ED Window=0x1F1D7494 Pos=0,0 Size=1440,900 Split=X
-  DockNode    ID=0x00000003 Parent=0x5F4274ED SizeRef=703,900 Selected=0xEEAF2C9D
-  DockNode    ID=0x00000004 Parent=0x5F4274ED SizeRef=735,900 Split=X
-    DockNode  ID=0x00000001 Parent=0x00000004 SizeRef=1057,900 CentralNode=1 Selected=0xEEAF2C9D
-    DockNode  ID=0x00000002 Parent=0x00000004 SizeRef=381,900 Selected=0xBCDEDAD9
-)INI";
-
      ImGui::LoadIniSettingsFromMemory(DEFAULT_INI);
 	 ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
      
@@ -169,6 +133,15 @@ DockSpace     ID=0x5F4274ED Window=0x1F1D7494 Pos=0,0 Size=1440,900 Split=X
 				 if ((event.key.keysym.mod & KMOD_CTRL) && event.key.keysym.sym == SDLK_x)
 				 {
                      ede::FileDialogs::ExportDialogueJsonFile();
+				 }
+				 if ((event.key.keysym.mod & KMOD_CTRL) && event.key.keysym.sym == SDLK_s)
+				 {
+					 ede::FileDialogs::SaveStateJson();
+				 }
+				 if ((event.key.keysym.mod & KMOD_CTRL) && event.key.keysym.sym == SDLK_r)
+				 {
+					 ImGui::LoadIniSettingsFromMemory(DEFAULT_INI);
+					 ImGui::MarkIniSettingsDirty();
 				 }
 			 }
          }
