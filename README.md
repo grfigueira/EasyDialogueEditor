@@ -12,8 +12,7 @@ Built with [ImGui](https://github.com/ocornut/imgui), [ImNodes](https://github.c
 
 It currently only runs natively on **Windows**.
 
-![image](https://github.com/user-attachments/assets/ac24f254-0a94-469f-ae4c-31caf7667b34)
-
+![image](https://github.com/user-attachments/assets/c99899fa-c815-455b-92d6-af5d53a00f01)
 
 ## How to build
 
