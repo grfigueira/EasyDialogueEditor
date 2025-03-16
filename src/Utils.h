@@ -53,7 +53,7 @@ namespace ede {
 	class FileDialogs 
 	{
 	public:
-		static void SaveFile(const json& j, const wchar_t* title = L"Save File");
+		static void SaveFile(const json& j, const wchar_t* title = L"Save File", bool* file_was_created = nullptr);
 		static json LoadFile(const wchar_t* title = L"Open File");
 		static void ExportDialogueJsonFile();
 		static void SaveStateJson();

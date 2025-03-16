@@ -20,7 +20,8 @@ namespace ede {
 	std::shared_ptr<Node> node_from_json(const json& j);
 	std::shared_ptr<Link> link_from_json(const json& j);
 
-	void FileDialogs::SaveFile(const json& j, const wchar_t* title) {
+	void FileDialogs::SaveFile(const json& j, const wchar_t* title, bool* file_was_created) {
+		bool success = false;
 		IFileSaveDialog* pFileSave;
 		HRESULT hr = CoCreateInstance(CLSID_FileSaveDialog, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pFileSave));
 
@@ -52,6 +53,7 @@ namespace ede {
 						if (outFile.is_open()) {
 							outFile << j.dump(4); // Pretty-print JSON
 							outFile.close();
+							success = true;
 						}
 
 						CoTaskMemFree(filePath);
@@ -61,6 +63,8 @@ namespace ede {
 			}
 			pFileSave->Release();
 		}
+		if (file_was_created != nullptr) 
+			*file_was_created = success;
 
 	}
 
@@ -126,8 +130,11 @@ namespace ede {
 			j.push_back(node);
 		}
 		std::cout << j << std::endl;
-		SaveFile(j, L"Export Dialogue");
-		ede::RequestNotification("Success", "Your dialogue was successfully exported!");
+		bool exported;
+		SaveFile(j, L"Export Dialogue", &exported);
+		if (exported) {
+			ede::RequestNotification("Success", "Your dialogue was successfully exported!");
+		}
 	}
 
 	// Converts state to json

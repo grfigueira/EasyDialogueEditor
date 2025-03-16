@@ -76,7 +76,7 @@ namespace ede
 					if (ImGui::BeginPopupModal(current_notification_title, &bShowPopupNotif, ImGuiWindowFlags_AlwaysAutoResize))
 					{
 						ImGui::Text(current_notification_description);
-						if (ImGui::Button("Ok")) {
+						if (ImGui::Button("Ok", ImVec2(50.0f, 0.0f))) {
 							bShowPopupNotif = false;
 						}
 						ImGui::EndPopup();
