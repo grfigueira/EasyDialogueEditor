@@ -309,7 +309,11 @@ namespace ede {
 			if(!callback_str.empty() 
 				&& !std::all_of(callback_str.begin(), callback_str.end(), [](unsigned char c) {return std::isspace(c);})) 
 			{
-				current_callbacks.insert(new_callback);
+				// can't have spaces in a callback, since the array of callbacks in the 
+				// exported JSON is separated using spaces
+				std::replace(callback_str.begin(), callback_str.end(), ' ', '_');
+
+				current_callbacks.insert(callback_str);
 				strcpy(new_callback, "");
 				ImGui::SetKeyboardFocusHere(-1);
 			}			
