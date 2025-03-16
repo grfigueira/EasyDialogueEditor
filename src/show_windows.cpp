@@ -138,18 +138,17 @@ namespace ede {
 		ImGui::PopStyleVar();
 	}
 
-
 	void ShowMenuBar() {
 		ImGui::BeginMainMenuBar();
 		if (ImGui::BeginMenu("File"))
 		{
-			ImGui::BeginDisabled();
-			if (ImGui::MenuItem("New")) {}
-			ImGui::EndDisabled();
-			if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+			if (ImGui::MenuItem("New", "Ctrl+N")) {
+				ede::ShowNewFilePopup();
+			}
+			/*if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
 			{
 				ImGui::SetTooltip("Not yet implemented");
-			}
+			}*/
 			ImGui::Separator();
 			if (ImGui::MenuItem("Load", "Ctrl+O")) {
 				ede::FileDialogs::LoadStateJson();

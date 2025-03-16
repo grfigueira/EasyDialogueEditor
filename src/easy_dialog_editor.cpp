@@ -42,7 +42,7 @@ namespace ede
 			State current_state;
 			static const char* NodeTypeStrings[];
 			bool bShowDemoWindow, bShowAboutSection, bShowCreateNodeTooltip, bShowHowToUseWindow,
-				bShowPopupNotif;
+				bShowPopupNotif, bShowNewFilePopup;
 			const char* current_notification_title = "";
 			const char* current_notification_description = "";
 
@@ -78,6 +78,27 @@ namespace ede
 						ImGui::Text(current_notification_description);
 						if (ImGui::Button("Ok", ImVec2(50.0f, 0.0f))) {
 							bShowPopupNotif = false;
+						}
+						ImGui::EndPopup();
+					}
+				}
+
+				if (bShowNewFilePopup) {
+					ImGui::OpenPopup("Are you sure?");
+					ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+					ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+					if (ImGui::BeginPopupModal("Are you sure?", &bShowNewFilePopup, ImGuiWindowFlags_AlwaysAutoResize)) {
+
+						ImGui::Text("Are you sure you want to start a new file?");
+						ImGui::Text("Don't forget to save your work!");
+
+						if (ImGui::Button("Save Current File")) {
+							ImGui::CloseCurrentPopup();
+						}
+						ImGui::SameLine();
+						if (ImGui::Button("Proceed")) {
+							ImGui::CloseCurrentPopup();
 						}
 						ImGui::EndPopup();
 					}
@@ -483,6 +504,10 @@ namespace ede
 				bShowHowToUseWindow = !bShowHowToUseWindow;
 			}
 
+			void ShowNewFilePopup() {
+				bShowNewFilePopup = true;
+			}
+
 			void RequestNotification(const char* title, const char* description) {
 				current_notification_title = title;
 				current_notification_description = description;
@@ -609,6 +634,9 @@ namespace ede
 
 	void NotifyCallbackDeletion(const std::string& deleted_callback) {
 		editor.NotifyCallbackDeletion(deleted_callback);
+	}
+	void ShowNewFilePopup() {
+		editor.ShowNewFilePopup();
 	}
 
 	void SetState(const State& new_state) {

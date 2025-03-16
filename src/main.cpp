@@ -149,6 +149,10 @@
                  {
                      ede::FileDialogs::LoadStateJson();
                  }
+				 if ((event.key.keysym.mod & KMOD_CTRL) && event.key.keysym.sym == SDLK_n)
+				 {
+					 ede::ShowNewFilePopup();
+				 }
 			 }
          }
  
