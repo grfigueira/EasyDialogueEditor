@@ -50,13 +50,14 @@ DockSpace     ID=0x5F4274ED Window=0x1F1D7494 Pos=0,0 Size=1440,900 Split=X
 )INI";
 
 namespace ede {
+	extern bool marked_for_UI_reset;
 	class FileDialogs 
 	{
 	public:
 		static void SaveFile(const json& j, const wchar_t* title = L"Save File", bool* file_was_created = nullptr);
 		static json LoadFile(const wchar_t* title = L"Open File");
 		static void ExportDialogueJsonFile();
-		static void SaveStateJson();
+		static void SaveStateJson(bool* file_saved = nullptr);
 		static void LoadStateJson();
 	};
 

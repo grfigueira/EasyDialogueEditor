@@ -16,7 +16,7 @@
 #include <node_editor.h>
 
 namespace ede {
-
+	bool marked_for_UI_reset = false;
 	std::shared_ptr<Node> node_from_json(const json& j);
 	std::shared_ptr<Link> link_from_json(const json& j);
 
@@ -138,7 +138,7 @@ namespace ede {
 	}
 
 	// Converts state to json
-	void FileDialogs::SaveStateJson() {
+	void FileDialogs::SaveStateJson(bool* file_saved) {
 
 		State state = ede::GetCurrentState();
 
@@ -176,7 +176,12 @@ namespace ede {
 			{"callbacks", state.callbacks},
 			/* TODO: place 'conditionals' here, once its implemented */
 		};
-		SaveFile(j, L"Save Current State");
+		if (file_saved != nullptr) {
+			SaveFile(j, L"Save Current State", file_saved);
+		}
+		else {
+			SaveFile(j, L"Save Current State");
+		}
 	}
 
 	void FileDialogs::LoadStateJson()

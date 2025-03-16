@@ -19,13 +19,10 @@
  #else
  #include <SDL2/SDL_opengl.h>
  #endif
- 
- //#include <cstdio>
- //#include <iostream> 
- //#include <thread>
 
 #include "Utils.h"
 #include "RobotoFont.hpp"
+#include <iostream>
 
 
  
@@ -69,7 +66,7 @@
      SDL_WindowFlags window_flags =
          (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
      SDL_Window* window = SDL_CreateWindow(
-         "EasyDialogueEditor v0.5 [beta]",
+         "EasyDialogueEditor v0.6 [beta]",
          SDL_WINDOWPOS_CENTERED,
          SDL_WINDOWPOS_CENTERED,
          1440,
@@ -116,6 +113,14 @@
      // Main loop
      while (!done)
      {
+		 if (!ImGui::GetIO().BackendPlatformUserData) {
+			 std::cout << "Warning: BackendPlatformUserData is null!" << std::endl;
+		 }
+
+		 // You can also check the context
+		 if (!ImGui::GetCurrentContext()) {
+			 std::cout << "Warning: ImGui context is null!" << std::endl;
+		 }
          SDL_Event event;
 
          /*************************************************************
@@ -140,10 +145,11 @@
 				 {
 					 ede::FileDialogs::SaveStateJson();
 				 }
-				 if ((event.key.keysym.mod & KMOD_CTRL) && event.key.keysym.sym == SDLK_r)
+				 if (((event.key.keysym.mod & KMOD_CTRL) && event.key.keysym.sym == SDLK_r))
 				 {
 					 ImGui::LoadIniSettingsFromMemory(DEFAULT_INI);
 					 ImGui::MarkIniSettingsDirty();
+                     ede::marked_for_UI_reset = false;
 				 }
                  if ((event.key.keysym.mod & KMOD_CTRL) && event.key.keysym.sym == SDLK_o) 
                  {
@@ -186,6 +192,12 @@
          glClear(GL_COLOR_BUFFER_BIT);
          ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
          SDL_GL_SwapWindow(window);
+
+         if (ede::marked_for_UI_reset) {
+			 ImGui::LoadIniSettingsFromMemory(DEFAULT_INI);
+			 ImGui::MarkIniSettingsDirty();
+			 ede::marked_for_UI_reset = false;
+         }
      }
  
      // Cleanup

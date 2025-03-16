@@ -14,6 +14,7 @@
 #include "imgui_stdlib.h"
 #include <iostream>
 #include "Node.h"
+#include "Utils.h"
 #include "show_windows.h"
 #include <unordered_map>
 #include <imgui_internal.h>
@@ -42,7 +43,7 @@ namespace ede
 			State current_state;
 			static const char* NodeTypeStrings[];
 			bool bShowDemoWindow, bShowAboutSection, bShowCreateNodeTooltip, bShowHowToUseWindow,
-				bShowPopupNotif, bShowNewFilePopup;
+				bShowPopupNotif, bShowNewFilePopup, temp_file_saved;
 			const char* current_notification_title = "";
 			const char* current_notification_description = "";
 
@@ -51,21 +52,6 @@ namespace ede
 			// runs every frame
 			void show()
 			{
-				if (bShowDemoWindow) {
-					ImGui::ShowDemoWindow();
-				}
-
-				if (bShowAboutSection) {
-					ede::ShowAboutWindow(&bShowAboutSection);
-				}
-
-				if (bShowCreateNodeTooltip) {
-					ImGui::SetTooltip("+ Add Node");
-				}
-
-				if (bShowHowToUseWindow) {
-					ede::ShowHowToUseGuide(&bShowHowToUseWindow);
-				}
 
 				if (bShowPopupNotif) {
 					ImGui::OpenPopup(current_notification_title);
@@ -89,16 +75,25 @@ namespace ede
 					ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
 					if (ImGui::BeginPopupModal("Are you sure?", &bShowNewFilePopup, ImGuiWindowFlags_AlwaysAutoResize)) {
-
+						
 						ImGui::Text("Are you sure you want to start a new file?");
 						ImGui::Text("Don't forget to save your work!");
 
-						if (ImGui::Button("Save Current File")) {
-							ImGui::CloseCurrentPopup();
+						if (!temp_file_saved) {
+							if (ImGui::Button("Save Current File")) {
+								ede::FileDialogs::SaveStateJson(&temp_file_saved);
+							}
+						}
+						else {
+							ImGui::BeginDisabled();
+							ImGui::Button("Current work saved!");
+							ImGui::EndDisabled();
 						}
 						ImGui::SameLine();
 						if (ImGui::Button("Proceed")) {
-							ImGui::CloseCurrentPopup();
+							current_state = {};
+							temp_file_saved = false;
+							bShowNewFilePopup = false;
 						}
 						ImGui::EndPopup();
 					}
@@ -111,7 +106,7 @@ namespace ede
 				ImGui::SetNextWindowSize(viewport->Size);
 				ImGui::SetNextWindowViewport(viewport->ID);
 
-				ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
+				ImGuiWindowFlags window_flags = /*ImGuiWindowFlags_NoTitleBar |*/ ImGuiWindowFlags_NoCollapse |
 					ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
 					ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
@@ -119,7 +114,7 @@ namespace ede
 
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 				ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 3.0f));
 
 				ImGui::Begin("MainDockspace", nullptr, window_flags);
 				ImGui::PopStyleVar(3);
@@ -136,6 +131,24 @@ namespace ede
 					ImGuiWindowFlags_::ImGuiWindowFlags_NoMove);
 
 				ede::ShowMenuBar();
+
+				// Other windows
+
+				if (bShowDemoWindow) {
+					ImGui::ShowDemoWindow();
+				}
+
+				if (bShowAboutSection) {
+					ede::ShowAboutWindow(&bShowAboutSection);
+				}
+
+				if (bShowCreateNodeTooltip) {
+					ImGui::SetTooltip("+ Add Node");
+				}
+
+				if (bShowHowToUseWindow) {
+					ede::ShowHowToUseGuide(&bShowHowToUseWindow);
+				}
 
 				HandleNodeRemoval();
 

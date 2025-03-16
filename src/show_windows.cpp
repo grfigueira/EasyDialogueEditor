@@ -139,16 +139,13 @@ namespace ede {
 	}
 
 	void ShowMenuBar() {
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 3.0f));
 		ImGui::BeginMainMenuBar();
 		if (ImGui::BeginMenu("File"))
 		{
 			if (ImGui::MenuItem("New", "Ctrl+N")) {
 				ede::ShowNewFilePopup();
 			}
-			/*if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
-			{
-				ImGui::SetTooltip("Not yet implemented");
-			}*/
 			ImGui::Separator();
 			if (ImGui::MenuItem("Load", "Ctrl+O")) {
 				ede::FileDialogs::LoadStateJson();
@@ -164,8 +161,7 @@ namespace ede {
 		}
 		if (ImGui::BeginMenu("Window")) {
 			if (ImGui::MenuItem("Reset layout", "Ctrl+R")) {
-				ImGui::LoadIniSettingsFromMemory(DEFAULT_INI);
-				ImGui::MarkIniSettingsDirty();
+				ede::marked_for_UI_reset = true;
 			}
 #ifdef _DEBUG
 			if (ImGui::MenuItem("Toggle Demo Window"))
@@ -179,12 +175,14 @@ namespace ede {
 			if (ImGui::MenuItem("How to use")) {
 				ede::ToggleHowToWindow();
 			}
+			ImGui::Separator();
 			if (ImGui::MenuItem("About")) {
 				ede::ToggleAboutWindow();
 			}
 			ImGui::EndMenu();
 		}
 		ImGui::EndMainMenuBar();
+		ImGui::PopStyleVar();
 	}
 
 	void ShowGraphInfoWindow()

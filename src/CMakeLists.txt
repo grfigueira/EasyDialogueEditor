@@ -4,7 +4,6 @@ add_executable(EasyDialogueEditor
     main.cpp
     Node.h
 	Utils.h
-	Roboto-Medium.c
     easy_dialog_editor.cpp
     show_windows.h
     show_windows.cpp
