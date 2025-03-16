@@ -1,7 +1,9 @@
 /******************************************************************************
- * Copyright (c) 2025 Guilherme Figueira
- * MIT License - See LICENSE file in the project root for details
- * Contact: g.figueira.2002@gmail.com
+	Created by Guilherme Figueira, 2025
+
+	My contacts (feel free to reach out):
+	- Github: https://github.com/grfigueira
+	- LinkedIn: https://www.linkedin.com/in/grfigueira/
  ******************************************************************************/
 
 #include "node_editor.h"
@@ -39,7 +41,10 @@ namespace ede
 			// Current state data
 			State current_state;
 			static const char* NodeTypeStrings[];
-			bool bShowDemoWindow, bShowAboutSection, bShowCreateNodeTooltip;
+			bool bShowDemoWindow, bShowAboutSection, bShowCreateNodeTooltip, bShowHowToUseWindow,
+				bShowPopupNotif;
+			const char* current_notification_title = "";
+			const char* current_notification_description = "";
 
 		public:
 
@@ -56,6 +61,26 @@ namespace ede
 
 				if (bShowCreateNodeTooltip) {
 					ImGui::SetTooltip("+ Add Node");
+				}
+
+				if (bShowHowToUseWindow) {
+					ede::ShowHowToUseGuide(&bShowHowToUseWindow);
+				}
+
+				if (bShowPopupNotif) {
+					ImGui::OpenPopup(current_notification_title);
+
+					ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+					ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+					if (ImGui::BeginPopupModal(current_notification_title, &bShowPopupNotif, ImGuiWindowFlags_AlwaysAutoResize))
+					{
+						ImGui::Text(current_notification_description);
+						if (ImGui::Button("Ok")) {
+							bShowPopupNotif = false;
+						}
+						ImGui::EndPopup();
+					}
 				}
 
 				ImGuiIO& io = ImGui::GetIO();
@@ -377,13 +402,14 @@ namespace ede
 
 					ImGui::Dummy(ImVec2(0.0f, 4.0f));
 
-					// callback selection
-					const char* combo_preview_value = "Select callback";
 
-					// Pass in the preview value visible before opening the combo (it could technically be different contents or not pulled from items[])
-					if (!node->selected_callbacks.empty()) {
-						const char* combo_preview_value = "Select callback";
+					// callback selection
+					std::string preview = "";
+					for (const auto& callback : node->selected_callbacks) {
+						preview.append(callback);
+						preview.append(" \n");
 					}
+					const char* combo_preview_value = node->selected_callbacks.empty() ? "Select callback" : (*node->selected_callbacks.begin()).c_str();
 
 					if (ImGui::BeginCombo("Callback tags", combo_preview_value, ImGuiComboFlags_::ImGuiComboFlags_WidthFitPreview))
 					{
@@ -452,12 +478,38 @@ namespace ede
 			void ToggleAboutWindow() {
 				bShowAboutSection = !bShowAboutSection;
 			}
+
+			void ToggleHowToWindow() {
+				bShowHowToUseWindow = !bShowHowToUseWindow;
+			}
+
+			void RequestNotification(const char* title, const char* description) {
+				current_notification_title = title;
+				current_notification_description = description;
+				bShowPopupNotif = true;
+			}
+
 			void NotifyCallbackDeletion(const std::string& deleted_callback) {
 				for (auto& node_pair : current_state.nodes) {
 					std::shared_ptr<Node> node = node_pair.second;
 					if (node) {
 						node->selected_callbacks.erase(deleted_callback);
 					}
+				}
+			}
+
+			void SetState(const State& new_state) {
+
+				current_state = new_state;
+
+				for (const auto& node_pair : current_state.nodes) {
+
+					std::shared_ptr<Node> node = node_pair.second;
+					
+					if (node) {
+						ImNodes::SetNodeScreenSpacePos(node->id, node->position);
+					}
+				
 				}
 			}
 
@@ -551,8 +603,21 @@ namespace ede
 		editor.ToggleAboutWindow();
 	}
 
+	void ToggleHowToWindow() {
+		editor.ToggleHowToWindow();
+	}
+
 	void NotifyCallbackDeletion(const std::string& deleted_callback) {
 		editor.NotifyCallbackDeletion(deleted_callback);
 	}
+
+	void SetState(const State& new_state) {
+		editor.SetState(new_state);
+	}
+
+	void RequestNotification(const char* title, const char* description) {
+		editor.RequestNotification(title, description);
+	}
+
 
 } // namespace storyteller

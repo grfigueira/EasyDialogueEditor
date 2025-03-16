@@ -1,7 +1,9 @@
 /******************************************************************************
- * Copyright (c) 2025 Guilherme Figueira
- * MIT License - See LICENSE file in the project root for details
- * Contact: g.figueira.2002@gmail.com
+    Created by Guilherme Figueira, 2025
+
+    My contacts (feel free to reach out):
+    - Github: https://github.com/grfigueira
+    - LinkedIn: https://www.linkedin.com/in/grfigueira/
  ******************************************************************************/
 
 #pragma once
@@ -12,11 +14,13 @@
 #include <set>
 #include <nlohmann/json.hpp>
 
+#define NOT_CURRENTLY_IN_USE 0
+
 /******************************************************************************
  *                   Every node-related data structure
  ******************************************************************************/
 
-// used for converting node_ids to parameters using bit-shifting
+// used for converting node_ids to parameters and vice-versa using bit-shifting
 enum NodePartShift
 {
     InputPin = 8,
@@ -27,7 +31,7 @@ enum NodeType
 {
     Speech,
     Response,
-    NodeTypeCount // used to convert NodeType to string. do not remove, and keep it in last
+    NodeTypeCount // used to convert NodeType to string. do not remove, and keep it in last.
 };
 
 struct SpeechNode;
@@ -45,12 +49,29 @@ struct Node
     bool             expectesResponse = false;
     std::set<std::string> selected_callbacks{};
 
-	Node(int _nodeId, NodeType _nodeType, const std::string& _text, ImVec2 _pos) {
+    // for runtime node creation
+	Node(int _nodeId, NodeType _nodeType, const std::string& _text, ImVec2 _pos) 
+    {
 		id = _nodeId;
 		nodeType = _nodeType;
 		text = _text;
 		position = _pos;
 	}
+
+    // for state loading
+    Node(int _nodeId, NodeType _nodeType, const std::string& _text, ImVec2 _pos,
+        int _nextNodeId, int _prevNodeId, std::vector<int>& _responses, bool _expectesResponse, std::set<std::string>& _selected_callbacks) 
+    {
+		id = _nodeId;
+		nodeType = _nodeType;
+		text = _text;
+		position = _pos;
+        nextNodeId = _nextNodeId;
+        prevNodeId = _prevNodeId;
+        responses = _responses;
+        expectesResponse = _expectesResponse;
+        selected_callbacks = _selected_callbacks;
+    }
 
     ~Node() = default;
 };
@@ -79,16 +100,18 @@ struct Link
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Link, id, start_attr, end_attr);
 
+#if NOT_CURRENTLY_IN_USE
 struct Conditional {
     std::string name;
     bool value;
 };
+#endif
 
 struct State {
-	std::unordered_map<int, std::shared_ptr<Node>>                 nodes{}; // maybe these should be smart pointers?
+	std::unordered_map<int, std::shared_ptr<Node>>                 nodes{};
 	std::unordered_map<int, std::shared_ptr<Link>>                 links{};
 	int                                next_node_id = -1;
 	int                                next_link_id = -1;
 	std::set<std::string> callbacks{};
-	std::set<Conditional> conditionals{};
+	//std::set<Conditional> conditionals{};
 };

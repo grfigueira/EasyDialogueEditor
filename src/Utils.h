@@ -1,7 +1,9 @@
 /******************************************************************************
- * Copyright (c) 2025 Guilherme Figueira
- * MIT License - See LICENSE file in the project root for details
- * Contact: g.figueira.2002@gmail.com
+	Created by Guilherme Figueira, 2025
+
+	My contacts (feel free to reach out):
+	- Github: https://github.com/grfigueira
+	- LinkedIn: https://www.linkedin.com/in/grfigueira/
  ******************************************************************************/
 
 #pragma once
@@ -51,8 +53,8 @@ namespace ede {
 	class FileDialogs 
 	{
 	public:
-		//static std::string OpenFile(const char* filter);
-		static void SaveFile(const json& j);
+		static void SaveFile(const json& j, const wchar_t* title = L"Save File");
+		static json LoadFile(const wchar_t* title = L"Open File");
 		static void ExportDialogueJsonFile();
 		static void SaveStateJson();
 		static void LoadStateJson();

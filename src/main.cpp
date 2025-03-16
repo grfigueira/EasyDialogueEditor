@@ -1,7 +1,9 @@
 /******************************************************************************
- * Copyright (c) 2025 Guilherme Figueira
- * MIT License - See LICENSE file in the project root for details
- * Contact: g.figueira.2002@gmail.com
+    Created by Guilherme Figueira, 2025
+
+    My contacts, feel free to reach out:
+    - Github: https://github.com/grfigueira
+    - LinkedIn: https://www.linkedin.com/in/grfigueira/
  ******************************************************************************/
 
  #include "node_editor.h"
@@ -18,9 +20,9 @@
  #include <SDL2/SDL_opengl.h>
  #endif
  
- #include <cstdio>
- #include <iostream> 
- #include <thread>
+ //#include <cstdio>
+ //#include <iostream> 
+ //#include <thread>
 
 #include "Utils.h"
 #include "RobotoFont.hpp"
@@ -67,7 +69,7 @@
      SDL_WindowFlags window_flags =
          (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
      SDL_Window* window = SDL_CreateWindow(
-         "EasyDialogueEditor v0.2.5 [beta]",
+         "EasyDialogueEditor v0.5 [beta]",
          SDL_WINDOWPOS_CENTERED,
          SDL_WINDOWPOS_CENTERED,
          1440,
@@ -143,6 +145,10 @@
 					 ImGui::LoadIniSettingsFromMemory(DEFAULT_INI);
 					 ImGui::MarkIniSettingsDirty();
 				 }
+                 if ((event.key.keysym.mod & KMOD_CTRL) && event.key.keysym.sym == SDLK_o) 
+                 {
+                     ede::FileDialogs::LoadStateJson();
+                 }
 			 }
          }
  

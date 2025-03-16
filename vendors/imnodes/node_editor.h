@@ -1,7 +1,9 @@
 /******************************************************************************
- * Copyright (c) 2025 Guilherme Figueira
- * MIT License - See LICENSE file in the project root for details
- * Contact: g.figueira.2002@gmail.com
+	Created by Guilherme Figueira, 2025
+
+	My contacts (feel free to reach out):
+	- Github: https://github.com/grfigueira
+	- LinkedIn: https://www.linkedin.com/in/grfigueira/
  ******************************************************************************/
 
 #pragma once
@@ -21,6 +23,9 @@ namespace ede
 	int GetNumNodesOfType(NodeType type);
 	void ToggleDemoWindow();
 	void ToggleAboutWindow();
+	void ToggleHowToWindow();
 	std::vector<Node> GetNodesData();
 	void NotifyCallbackDeletion(const std::string& deleted_callback);
+	void SetState(const State& new_state);
+	void RequestNotification(const char* title, const char* description);
 } // namespace storyteller
