@@ -113,5 +113,5 @@ struct State {
 	int                                next_node_id = -1;
 	int                                next_link_id = -1;
 	std::set<std::string> callbacks{};
-	//std::set<Conditional> conditionals{};
+	//std::set<Conditional> conditionals{}; // pontential future feature, we'll see.
 };

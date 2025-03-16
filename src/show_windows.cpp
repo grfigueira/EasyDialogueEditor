@@ -203,7 +203,7 @@ namespace ede {
 			ImGuiWindowFlags_::ImGuiWindowFlags_AlwaysVerticalScrollbar);
 		ImGui::SeparatorTextEx(0, "Current state", NULL, ImGui::CalcTextSize(" (?)").x);
 		ImGui::SameLine();
-		HelpMarker("Displays how the current state will be exported");
+		HelpMarker("Displays how the current state looks in a readable way. This is not JSON!");
 		ImGui::Dummy(ImVec2(0.0f, 5.0f));
 		std::string raw_info;
 
@@ -241,20 +241,6 @@ namespace ede {
 
 		ImGui::EndChild();
 
-
-		/*
-		ImGui::Dummy(ImVec2(0.0f, 5.0f));
-		ImGui::BeginChild("ScrollableText", ImVec2(0, raw_text_block_height + 15), true);
-		ImGui::SeparatorTextEx(0, "Raw string", NULL, ImGui::CalcTextSize(" (?)").x);
-		ImGui::SameLine();
-		HelpMarker("Raw JSON output. In case you want to quickly copy and paste somewhere");
-		ImGui::InputTextMultiline("##rawdata",
-			raw_info.data(),
-			raw_info.size() + 1,
-			ImVec2(-1.0f, -1.0f),
-			ImGuiInputTextFlags_ReadOnly);
-		ImGui::EndChild();
-		*/
 		ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
 		ImGui::BeginChild("CallbackEvents", ImVec2(0, ImGui::GetContentRegionAvail().y - 80), true);
