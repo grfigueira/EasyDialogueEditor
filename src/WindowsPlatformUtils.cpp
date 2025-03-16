@@ -127,6 +127,7 @@ namespace ede {
 		}
 		std::cout << j << std::endl;
 		SaveFile(j, L"Export Dialogue");
+		ede::RequestNotification("Success", "Your dialogue was successfully exported!");
 	}
 
 	// Converts state to json
