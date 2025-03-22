@@ -1,0 +1,117 @@
+{
+    "callbacks": [
+        "npc_smile",
+        "trigger_fight"
+    ],
+    "links": [
+        {
+            "end_attr": 256,
+            "id": 0,
+            "start_attr": 0
+        },
+        {
+            "end_attr": 512,
+            "id": 1,
+            "start_attr": 16777216
+        },
+        {
+            "end_attr": 768,
+            "id": 2,
+            "start_attr": 33554432
+        },
+        {
+            "end_attr": 1024,
+            "id": 3,
+            "start_attr": 33554432
+        }
+    ],
+    "next_link_id": 3,
+    "next_node_id": 4,
+    "nodes": [
+        {
+            "expectsResponse": false,
+            "nextNodeId": 1,
+            "nodeId": 0,
+            "nodeType": 0,
+            "position": {
+                "x": 69.511962890625,
+                "y": 417.4325866699219
+            },
+            "prevNodeIds": [],
+            "responses": [],
+            "selected_callbacks": [],
+            "text": "Tell me player"
+        },
+        {
+            "expectsResponse": false,
+            "nextNodeId": 2,
+            "nodeId": 1,
+            "nodeType": 0,
+            "position": {
+                "x": 558.261962890625,
+                "y": 426.01593017578125
+            },
+            "prevNodeIds": [
+                0
+            ],
+            "responses": [],
+            "selected_callbacks": [],
+            "text": "Once I am sitting in that throne"
+        },
+        {
+            "expectsResponse": true,
+            "nextNodeId": -1,
+            "nodeId": 2,
+            "nodeType": 0,
+            "position": {
+                "x": 999.261962890625,
+                "y": 430.01593017578125
+            },
+            "prevNodeIds": [
+                1
+            ],
+            "responses": [
+                3,
+                4
+            ],
+            "selected_callbacks": [],
+            "text": "Will you bend the knee?"
+        },
+        {
+            "expectsResponse": false,
+            "nextNodeId": -1,
+            "nodeId": 3,
+            "nodeType": 1,
+            "position": {
+                "x": 1445.261962890625,
+                "y": 325.01593017578125
+            },
+            "prevNodeIds": [
+                2
+            ],
+            "responses": [],
+            "selected_callbacks": [
+                "npc_smile"
+            ],
+            "text": "Yes my lord."
+        },
+        {
+            "expectsResponse": false,
+            "nextNodeId": -1,
+            "nodeId": 4,
+            "nodeType": 1,
+            "position": {
+                "x": 1452.261962890625,
+                "y": 620.0159301757813
+            },
+            "prevNodeIds": [
+                2
+            ],
+            "responses": [],
+            "selected_callbacks": [
+                "trigger_fight"
+            ],
+            "text": "Never!"
+        }
+    ]
+}

@@ -24,9 +24,9 @@
 
 #define LOG(x) std::cout << x << std::endl;
 
-/******************************************************************************
- *                   EasyDialogEditor - Main file
- ******************************************************************************/
+ /******************************************************************************
+  *                   EasyDialogEditor - Main file
+  ******************************************************************************/
 
 namespace ede
 {
@@ -75,7 +75,7 @@ namespace ede
 					ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
 					if (ImGui::BeginPopupModal("Are you sure?", &bShowNewFilePopup, ImGuiWindowFlags_AlwaysAutoResize)) {
-						
+
 						ImGui::Text("Are you sure you want to start a new file?");
 						ImGui::Text("Don't forget to save your work!");
 
@@ -162,7 +162,7 @@ namespace ede
 					{
 						std::shared_ptr<Node> node = pair.second;
 						if (node) {
-							 std::string header_text = std::format("{} | id: {}", NodeTypeStrings[node->nodeType], node->id);
+							std::string header_text = std::format("{} | id: {}", NodeTypeStrings[node->nodeType], node->id);
 							DrawNode(node->id, header_text.c_str());
 						}
 					}
@@ -211,25 +211,22 @@ namespace ede
 				std::shared_ptr<Node> start_node = current_state.nodes[start_node_id];
 				std::shared_ptr<Node> end_node = current_state.nodes[end_node_id];
 
+				if (start_node->nextNodeId != -1 && !start_node->expectesResponse
+					|| (start_node->nodeType == NodeType::Response && end_node->nodeType == NodeType::Response)) {
+					return;
+				}
+
 				if (start_node->nodeType == NodeType::Speech) {
 					if (end_node->nodeType == NodeType::Response) {
 						if (!start_node->expectesResponse) {
 							return;
 						}
-						else {
-							start_node->responses.push_back(end_node_id);
-							end_node->prevNodeId = start_node_id;
-						}
-					}
-					else {
-						start_node->nextNodeId = end_node_id;
-					}
-				}
+						start_node->responses.push_back(end_node_id);
 
-				if (start_node->nodeType == NodeType::Response && end_node->nodeType == NodeType::Response) {
-					return;
+					}
 				}
-				
+				start_node->nextNodeId = end_node_id;
+				end_node->prevNodeIds.push_back(start_node_id);
 				std::shared_ptr<Link> link = std::make_shared<Link>(++current_state.next_link_id, start_attr, end_attr);
 				current_state.links[link->id] = link;
 
@@ -250,7 +247,7 @@ namespace ede
 						if (start_node->expectesResponse)
 						{
 							std::shared_ptr<Node> newNode = AddNode("Yes/No", ImGui::GetMousePos(), NodeType::Response);
-							newNode->prevNodeId = started_attr >> NodePartShift::EndPin;
+							newNode->prevNodeIds.push_back(started_attr >> NodePartShift::EndPin);
 
 							std::shared_ptr<Link> link = std::make_shared<Link>(
 								++current_state.next_link_id, started_attr, current_state.next_node_id << NodePartShift::InputPin);
@@ -265,7 +262,7 @@ namespace ede
 					if (start_node->nextNodeId == -1) // isn't connected to any node yet
 					{
 						std::shared_ptr<Node> newNode = AddNode("This is interesting...", ImGui::GetMousePos(), NodeType::Speech);
-						newNode->prevNodeId = started_attr >> NodePartShift::EndPin;
+						newNode->prevNodeIds.push_back(started_attr >> NodePartShift::EndPin);
 
 						std::shared_ptr<Link> link = std::make_shared<Link>(
 							++current_state.next_link_id, started_attr, current_state.next_node_id << NodePartShift::InputPin);
@@ -276,7 +273,7 @@ namespace ede
 					}
 				}
 			}
-			
+
 			[[deprecated("Creating nodes now works by dropping links")]]
 			void ShowNodeCreationPopup()
 			{
@@ -337,7 +334,7 @@ namespace ede
 				current_state.nodes[node->id] = node;
 				return node;
 			}
-			
+
 			void HandleNodeRemoval() {
 				const int num_nodes_selected = ImNodes::NumSelectedNodes();
 				if (num_nodes_selected > 0 && (ImGui::IsKeyReleased(ImGuiKey_Delete)))
@@ -361,17 +358,29 @@ namespace ede
 
 							if (std::shared_ptr<Node> node = current_state.nodes[node_id]) {
 
-								if (std::shared_ptr<Node> prev_node = current_state.nodes[node->prevNodeId]) {
-									prev_node->nextNodeId = -1;
-									if (node->nodeType == NodeType::Response) {
+
+								for (int prevId : node->prevNodeIds) {
+									std::cout << "delete: now treating prevId: " << prevId << std::endl;
+									if (std::shared_ptr<Node> prev_node = current_state.nodes[prevId]) {
+										if (node->nodeType == NodeType::Response) { // if the node we are deleting is a response
 											std::vector<int>& responses = prev_node->responses;
 											responses.erase(std::remove(responses.begin(), responses.end(), node_id), responses.end());
+										}
+										else {
+											prev_node->nextNodeId = -1;
+											std::cout << "delete: Prev node with id: " << prevId << " was updated to have nextNodeId " << prev_node->nextNodeId << std::endl;
+										}
 									}
 								}
 
 								if (node->nextNodeId != -1) {
 									if (std::shared_ptr<Node> next_node = current_state.nodes[node->nextNodeId]) {
-										next_node->prevNodeId = -1;
+
+										auto& nPrevIds = next_node->prevNodeIds; // just an alias
+										
+										auto newEnd = std::remove(nPrevIds.begin(), nPrevIds.end(), node_id);
+										nPrevIds.erase(newEnd, nPrevIds.end());
+										
 										std::cout << "next_node info: " << next_node->id << "\n";
 									}
 								}
@@ -454,7 +463,7 @@ namespace ede
 							if (ImGui::Selectable(callback.c_str(), is_selected)) {
 
 								// callback tag was already selected
-								if(!node->selected_callbacks.insert(callback).second) {
+								if (!node->selected_callbacks.insert(callback).second) {
 
 									auto it = node->selected_callbacks.find(callback);
 
@@ -475,19 +484,19 @@ namespace ede
 					ImGui::Dummy(ImVec2(0.0f, 4.0f));
 
 					// input pin
-					if(node_id != 0)
+					if (node_id != 0)
 					{
 						ImNodes::BeginInputAttribute(node_id << 8);
 						ImGui::TextUnformatted("input");
 						ImNodes::EndInputAttribute();
 					}
-					
+
 					// output pin
 					ImGui::SameLine(200);
 					ImNodes::BeginOutputAttribute(node_id << 24);
 					ImGui::TextUnformatted("output");
 					ImNodes::EndOutputAttribute();
-					
+
 					ImGui::Dummy(ImVec2(0.0f, 4.0f));
 
 					ImNodes::EndNode();
@@ -543,11 +552,11 @@ namespace ede
 				for (const auto& node_pair : current_state.nodes) {
 
 					std::shared_ptr<Node> node = node_pair.second;
-					
+
 					if (node) {
 						ImNodes::SetNodeScreenSpacePos(node->id, node->position);
 					}
-				
+
 				}
 			}
 
@@ -565,7 +574,7 @@ namespace ede
 		// spawn root node of conversation
 		editor.AddNode("Conversation starter", ImVec2(150, ImGui::GetWindowSize().y / 1.2), NodeType::Speech);
 	}
-	
+
 	void NodeEditorInitialize()
 	{
 		ImNodes::SetNodeGridSpacePos(1, ImVec2(200.0f, 200.0f));
@@ -636,7 +645,7 @@ namespace ede
 	void ToggleDemoWindow() {
 		editor.ToggleDemoWindow();
 	}
-	
+
 	void ToggleAboutWindow() {
 		editor.ToggleAboutWindow();
 	}

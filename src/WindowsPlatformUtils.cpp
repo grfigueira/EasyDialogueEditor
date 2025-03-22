@@ -152,7 +152,7 @@ namespace ede {
 					{"text", node->text},
 					{"position", {{"x", ImNodes::GetNodeScreenSpacePos(node->id).x}, {"y", ImNodes::GetNodeScreenSpacePos(node->id).y}}},
 					{"nextNodeId", node->nextNodeId},
-					{"prevNodeId", node->prevNodeId},
+					{"prevNodeIds", node->prevNodeIds},
 					{"responses", node->responses},
 					{"expectsResponse", node->expectesResponse},
 					{"selected_callbacks", node->selected_callbacks}
@@ -233,7 +233,7 @@ namespace ede {
 		std::string text = j.at("text").get<std::string>();
 		ImVec2 position(j.at("position").at("x").get<float>(), j.at("position").at("y").get<float>());
 		int nextNodeId = j.at("nextNodeId").get<int>();
-		int prevNodeId = j.at("prevNodeId").get<int>();
+		std::vector<int> prevNodeIds = j.at("prevNodeIds").get<std::vector<int>>();
 		std::vector<int> responses = j.at("responses").get<std::vector<int>>();
 		bool expectsResponse = j.at("expectsResponse").get<bool>();
 
@@ -242,7 +242,7 @@ namespace ede {
 			selected_callbacks.insert(callback);
 		}
 
-		return std::make_shared<Node>(nodeId, nodeType, text, position, nextNodeId, prevNodeId,
+		return std::make_shared<Node>(nodeId, nodeType, text, position, nextNodeId, prevNodeIds,
 			responses, expectsResponse, selected_callbacks);
 	}
 

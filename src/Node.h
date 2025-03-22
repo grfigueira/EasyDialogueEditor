@@ -44,7 +44,7 @@ struct Node
     std::string text;
     ImVec2      position;
     int nextNodeId = -1;
-    int prevNodeId = -1;
+    std::vector<int> prevNodeIds{};
     std::vector<int> responses{};
     bool             expectesResponse = false;
     std::set<std::string> selected_callbacks{};
@@ -60,14 +60,14 @@ struct Node
 
     // for state loading
     Node(int _nodeId, NodeType _nodeType, const std::string& _text, ImVec2 _pos,
-        int _nextNodeId, int _prevNodeId, std::vector<int>& _responses, bool _expectesResponse, std::set<std::string>& _selected_callbacks) 
+        int _nextNodeId, std::vector<int>& _prevNodeIds, std::vector<int>& _responses, bool _expectesResponse, std::set<std::string>& _selected_callbacks)
     {
 		id = _nodeId;
 		nodeType = _nodeType;
 		text = _text;
 		position = _pos;
         nextNodeId = _nextNodeId;
-        prevNodeId = _prevNodeId;
+        prevNodeIds = _prevNodeIds;
         responses = _responses;
         expectesResponse = _expectesResponse;
         selected_callbacks = _selected_callbacks;

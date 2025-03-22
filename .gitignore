@@ -2,6 +2,7 @@
 /build/
 /out/
 /src/out/
+/dialogue_example/MyExamples/
 /CMakeFiles/
 /_deps/
 /vcpkg_installed/
