@@ -12,29 +12,35 @@ Built with [ImGui](https://github.com/ocornut/imgui), [ImNodes](https://github.c
 
 It currently only runs natively on **Windows**.
 
-![420433679-4aca71f5-2ccc-415b-8c6a-5a72911433f3](https://github.com/user-attachments/assets/cfca8c84-73b3-4964-bfe5-4b2833f85395)
+![image](https://github.com/user-attachments/assets/c99899fa-c815-455b-92d6-af5d53a00f01)
 
 ## How to build
 
 ### Prerequisites
 - C++ Compiler (GCC, Clang, or MSVC)
 - CMake
+- Preferably Visual Studio 2022, but there are other ways to build the program. 
 
 ### Building
-Inside the cloned project run the following command:
+Inside the cloned project run the following commands to generate a Visual Studio solution:
 
 ```
 git submodule update --init --recursive
+mkdir build
+cd build
+cmake .. -G "Visual Studio 17 2022" -A x64
 ```
 
 Some dependancies are managed by [vcpkg](https://github.com/microsoft/vcpkg), therefore we need to bootstrap it and install the dependancies:
 ```
 cd vcpkg
 .\bootstrap-vcpkg.bat
-vcpkg install sdl2 nlohmann-json
 ```
-Alternatively, instead of running `vcpkg install sdl2 nlohmann-json`, if you are using Visual Studio 2022:
-- Right click the **EasyDialogEditor** solution → Properties → vcpkg → Set `Use Vcpkg Manifest` to **Yes**
+Then, open the previously generated solution in Visual Studio 2022 and do the following:
+- In the solution explorer, right click on `EasyDialogEditor` → "Set as Startup Project"
+- Right click the **EasyDialogEditor** solution again → Properties → vcpkg → Set `Use Vcpkg Manifest` to **Yes**
+
+> I should probably write a python script to automate all of this...
 
 ## FAQ (Frequently Asked Questions)
 
