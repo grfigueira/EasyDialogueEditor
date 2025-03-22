@@ -1,5 +1,9 @@
 # EasyDialogueEditor
 
+### Watch the Youtube trailer here: https://www.youtube.com/watch?v=M8uM_cWPmNM
+
+---
+
 **EasyDialogueEditor** is a lightweight dialogue tree editor for games. 
 
 It allows you to visually create dialogue trees and export them as JSON files.
