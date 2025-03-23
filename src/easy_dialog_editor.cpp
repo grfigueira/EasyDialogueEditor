@@ -92,6 +92,8 @@ namespace ede
 						ImGui::SameLine();
 						if (ImGui::Button("Proceed")) {
 							current_state = {};
+							// Add new root node
+							InitializeConversation();
 							temp_file_saved = false;
 							bShowNewFilePopup = false;
 						}
@@ -337,6 +339,31 @@ namespace ede
 
 			void HandleNodeRemoval() {
 				const int num_nodes_selected = ImNodes::NumSelectedNodes();
+				const int num_links_selected = ImNodes::NumSelectedLinks();
+				if (num_links_selected > 0 && (ImGui::IsKeyReleased(ImGuiKey_Delete))) {
+					int* selected_links = new int[num_links_selected];
+					ImNodes::GetSelectedLinks(selected_links);
+					if (selected_links) {
+						for (int i = 0; i < num_links_selected; ++i) {
+							
+							// remove response if start_node was response. Also remove next_node_id and prevNodeId.
+
+							int link_id = selected_links[i];
+							std::shared_ptr<Link> link = current_state.links[link_id];
+							std::shared_ptr<Node> start_node = current_state.nodes[link->start_attr >> NodePartShift::EndPin];
+							int end_node_id = link->end_attr >> NodePartShift::InputPin;
+							if (start_node->expectesResponse) {
+								start_node->responses.erase(std::remove(start_node->responses.begin(), start_node->responses.end(), end_node_id), start_node->responses.end());
+							}
+							start_node->nextNodeId = -1;
+							std::vector<int> &ePrevNodes = current_state.nodes[end_node_id]->prevNodeIds;
+							ePrevNodes.erase(std::remove(ePrevNodes.begin(), ePrevNodes.end(), start_node->id), ePrevNodes.end());
+
+							current_state.links.erase(link_id);
+						}
+					}
+					delete[] selected_links;
+				}
 				if (num_nodes_selected > 0 && (ImGui::IsKeyReleased(ImGuiKey_Delete)))
 				{
 					int* selected_nodes = new int[num_nodes_selected];
