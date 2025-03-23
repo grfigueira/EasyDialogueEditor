@@ -241,9 +241,13 @@ namespace ede
 				if (ImNodes::IsLinkDropped(&started_attr, /*including_detached_links=*/false))
 				{
 					bShowCreateNodeTooltip = false;
+					if ((started_attr & (0xFF << NodePartShift::InputPin)) && !(started_attr & (0xFF << NodePartShift::EndPin))) {
+						std::cout << "Was input\n";
+						return;
+					}
 					LOG("linked dropped");
 					std::shared_ptr<Node> start_node = current_state.nodes[started_attr >> NodePartShift::EndPin];
-
+					
 					if (start_node)
 					{
 						if (start_node->expectesResponse)
@@ -696,5 +700,9 @@ namespace ede
 		editor.RequestNotification(title, description);
 	}
 
+	bool IsInputPin(int attribute)
+	{
+		return (attribute & (0xFF << NodePartShift::InputPin)) && !(attribute & (0xFF << NodePartShift::EndPin));
+	}
 
 } // namespace storyteller
